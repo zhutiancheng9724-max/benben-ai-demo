@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 
 type View = "market" | "profile" | "workbench";
-type Direction = "brand" | "warm";
 
 const experts = [
   {
@@ -70,7 +69,6 @@ const navItems: Array<{ id: View; icon: string; label: string }> = [
 
 export default function Home() {
   const [view, setView] = useState<View>("market");
-  const [direction, setDirection] = useState<Direction>("brand");
   const [category, setCategory] = useState("全部");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<(typeof experts)[number] | null>(null);
@@ -91,7 +89,7 @@ export default function Home() {
   };
 
   return (
-    <main className={`app-shell ${direction === "warm" ? "direction-warm" : "direction-brand"}`}>
+    <main className="app-shell direction-brand">
       <aside className="rail" aria-label="一级导航">
         <button className="brand-mark" aria-label="犇犇AI首页"><span>犇</span></button>
         <div className="rail-group">
@@ -142,10 +140,7 @@ export default function Home() {
             <span className="breadcrumb">犇犇AI / {view === "market" ? "招聘大厅" : view === "profile" ? "专家档案" : "协同工作台"}</span>
           </div>
           <div className="top-actions">
-            <div className="direction-switch" aria-label="方案切换">
-              <button className={direction === "brand" ? "active" : ""} onClick={() => setDirection("brand")}>A · 品牌克制版</button>
-              <button className={direction === "warm" ? "active" : ""} onClick={() => setDirection("warm")}>B · 温暖伙伴版</button>
-            </div>
+            <span className="design-badge">品牌克制版</span>
             <button className="icon-button" aria-label="帮助">?</button>
             <button className="user-pill"><span>田</span>天成</button>
           </div>
@@ -163,7 +158,7 @@ export default function Home() {
             onHire={hire}
           />
         )}
-        {view === "profile" && <ProfilePage direction={direction} />}
+        {view === "profile" && <ProfilePage />}
         {view === "workbench" && <WorkbenchPage />}
       </section>
 
@@ -244,7 +239,7 @@ function MarketPage({ query, setQuery, category, setCategory, experts: cards, hi
   );
 }
 
-function ProfilePage({ direction }: { direction: Direction }) {
+function ProfilePage() {
   const [step, setStep] = useState(1);
   const [advanced, setAdvanced] = useState(false);
   const [chat, setChat] = useState("");
@@ -315,7 +310,6 @@ function ProfilePage({ direction }: { direction: Direction }) {
           <small className="preview-footnote">试岗不会影响真实业务数据</small>
         </aside>
       </div>
-      {direction === "warm" && <div className="warm-helper"><img src="/expert-wizard.png" alt="元吉助手" /><div><strong>需要一点灵感？</strong><span>我可以帮你把岗位说明变得更好懂。</span></div><button>帮我完善</button></div>}
     </div>
   );
 }
