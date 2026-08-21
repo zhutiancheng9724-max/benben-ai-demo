@@ -13,11 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "犇犇AI · 快乐高效的数字员工工作台",
+  title: "犇犇·为快乐高效而生",
   description: "班牛智能体专家市场、专家入职与协同工作台体验原型。",
   icons: {
-    icon: "/expert-manager.png",
-    shortcut: "/expert-manager.png",
+    icon: "/figma-task/benben.png",
+    shortcut: "/figma-task/benben.png",
   },
 };
 

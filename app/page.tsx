@@ -1,344 +1,242 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type View = "market" | "profile" | "workbench";
+const A = "/figma-task";
+
+const nav = [
+  ["home.svg", "首页"], ["benben.png", "犇犇"], ["consumer.svg", "消费者"],
+  ["miniapp.svg", "小程序"], ["voc.svg", "VOC"], ["more.svg", "更多"],
+  ["apps.svg", "应用"], ["search.svg", "搜索"], ["notifications.svg", "通知"],
+] as const;
+
+const taskData = [
+  { title: "用户申请退款理赔，需核查诊断", time: "02/11 10:54", order: "6921739428437523559", risk: "high", tag: "", detail: "用户申请退款理赔，需核查诊断" },
+  { title: "工单状态更新失败，需人工介入处理", time: "02/11 10:54", order: "6921739428437523559", risk: "medium", tag: "", detail: "工单状态更新失败，需人工介入处理" },
+  { title: "用户投诉商品数量缺少，需核查发货记录", time: "02/11 10:54", order: "6921739428437523551", risk: "", tag: "", detail: "用户投诉商品数量缺少，需核查发货记录" },
+  { title: "未按约定时间发货，赔付自动判定", time: "02/11 10:54", order: "6921739428437523552", risk: "", tag: "", detail: "未按约定时间发货，赔付自动判定" },
+  { title: "订单咨询及售后流转记录", time: "02/11 10:54", order: "6921739428437523553", risk: "", tag: "", detail: "订单咨询及售后流转记录" },
+  { title: "识别到羊毛党风险判定，需人工介入", time: "02/11 10:54", order: "6921739428437523554", risk: "high", tag: "", detail: "识别到羊毛党风险判定，需人工介入" },
+  { title: "用户申请退款理赔，需核查诊断", time: "02/11 10:54", order: "6921739428437523555", risk: "", tag: "", detail: "用户申请退款理赔，需核查诊断" },
+];
 
 const experts = [
-  {
-    id: "refund",
-    name: "朱迪",
-    role: "售后退款审核专家",
-    image: "/expert-manager.png",
-    tint: "peach",
-    intro: "稳妥处理退货、退款与高风险客诉，让售后高峰也保持从容。",
-    tags: ["退款审核", "情绪安抚", "风险识别"],
-    fit: "95%",
-    used: "32 家团队在用",
-    category: "售后服务",
-  },
-  {
-    id: "ops",
-    name: "多来米",
-    role: "店铺运营导航专家",
-    image: "/expert-navigator.png",
-    tint: "cream",
-    intro: "熟悉店铺规则与经营路径，帮新人快速找到正确的下一步。",
-    tags: ["店铺导航", "规则问答", "流程指引"],
-    fit: "91%",
-    used: "18 家团队在用",
-    category: "店铺运营",
-  },
-  {
-    id: "content",
-    name: "元吉",
-    role: "内容创意与转化专家",
-    image: "/expert-wizard.png",
-    tint: "lilac",
-    intro: "把产品卖点变成更好懂、更有吸引力的内容与活动方案。",
-    tags: ["内容生成", "活动策划", "素材优化"],
-    fit: "88%",
-    used: "24 家团队在用",
-    category: "内容营销",
-  },
-  {
-    id: "support",
-    name: "犇犇助手",
-    role: "通用业务协同专家",
-    image: "/expert-default.png",
-    tint: "sky",
-    intro: "从资料整理到任务跟进，接住团队里重复却重要的日常工作。",
-    tags: ["资料整理", "任务跟进", "跨团队协同"],
-    fit: "84%",
-    used: "46 家团队在用",
-    category: "团队协作",
-  },
-];
-
-const tasks = [
-  { title: "核对退货入库差异", owner: "朱迪", state: "等你确认", tone: "warn", progress: 82, time: "刚刚", detail: "已比对订单、物流和仓库记录，发现少入库 1 件。" },
-  { title: "处理高风险退款申请", owner: "朱迪", state: "正在处理", tone: "run", progress: 56, time: "3 分钟前", detail: "正在核验买家沟通记录与历史退款情况。" },
-  { title: "整理本周售后问题趋势", owner: "多来米", state: "已完成", tone: "done", progress: 100, time: "12 分钟前", detail: "已生成 5 条趋势洞察和 3 项优化建议。" },
-];
-
-const navItems: Array<{ id: View; icon: string; label: string }> = [
-  { id: "market", icon: "⌁", label: "招聘大厅" },
-  { id: "profile", icon: "◎", label: "我的专家" },
-  { id: "workbench", icon: "✓", label: "协同工作台" },
-];
+  ["system-refund.png", "退款原因分析专家"], ["system-dispute.png", "纠纷处理专家"], ["system-risk.png", "羊毛党风控专家"],
+  ["system-delivery.png", "送装一体专家"], ["system-repair.png", "维修诊断专家"], ["system-transaction.png", "交易风控专家"],
+  ["system-review.png", "评价管理专家"], ["system-conversation.png", "会话分析专家"],
+] as const;
 
 export default function Home() {
-  const [view, setView] = useState<View>("market");
-  const [category, setCategory] = useState("全部");
+  const [designId, setDesignId] = useState("1404-1493");
+  const [expertMode, setExpertMode] = useState(false);
+  const [expertSection, setExpertSection] = useState("experts");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setDesignId(params.get("design") || "1404-1493");
+    setExpertMode(params.get("expert") === "1");
+    setExpertSection(params.get("section") === "skills" ? "skills" : "experts");
+  }, []);
+
+  if (expertMode) return <ExpertHub section={expertSection} onBack={() => { window.history.replaceState({}, "", "/?design=1404-1493"); setExpertMode(false); }} />;
+  const chat = ["1404-1392", "1414-832", "1414-1072", "1423-474"].includes(designId);
+  const menu = ["1404-1881", "1414-28", "1414-430", "1414-832", "1414-952", "1414-1072"].includes(designId);
+  if (chat) return <ChatHome menuOpen={menu} />;
+  return <TaskHome menuOpen={menu} />;
+}
+
+function TaskHome({ menuOpen }: { menuOpen: boolean }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(menuOpen);
+  const [activeTask, setActiveTask] = useState(1);
+  const [readTasks, setReadTasks] = useState<number[]>([2, 3, 4]);
+  const [taskTab, setTaskTab] = useState("组内任务");
+  const [detailTab, setDetailTab] = useState("概览");
+  const [risk, setRisk] = useState("全部");
+  const [search, setSearch] = useState("");
+  const shownTasks = useMemo(() => taskData.filter((task) => task.title.includes(search) && (risk === "全部" || task.risk === risk)), [risk, search]);
+  const selected = taskData[activeTask];
+
+  return <main className="task-app">
+    <aside className="side-rail">
+      <img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" />
+      <RailButtons />
+      <img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" />
+    </aside>
+    <header className="topbar">
+      <button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Task <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="task" />}
+      <div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索历史对话" /></div>
+      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />犇犇专家</a><i />
+      <button className="settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button>
+    </header>
+    <section className="workspace">
+      <FilterPanel risk={risk} onRisk={setRisk} />
+      <section className="task-list">
+        <div className="list-toolbar"><div className="list-switch"><button type="button" onClick={() => setTaskTab("待我处理")} className={taskTab === "待我处理" ? "on" : ""}>待我处理 <b>0</b></button><button type="button" onClick={() => setTaskTab("组内任务")} className={taskTab === "组内任务" ? "on" : ""}>组内任务 <b>147</b></button></div><button className="refresh" type="button"><img src={`${A}/refresh-list.svg`} alt="刷新" /></button></div>
+        <div className="tasks">{shownTasks.map((task, listIndex) => { const index = taskData.indexOf(task); const isRead = readTasks.includes(index); return <button type="button" onClick={() => { setActiveTask(index); setReadTasks((items) => items.includes(index) ? items : [...items, index]); }} className={`task-row ${activeTask === index ? "active" : ""} ${isRead ? "read" : "unread"}`} key={`${task.order}-${listIndex}`}>
+          <span className="task-time">{task.time}</span><p className="task-title">{task.risk && <img src={`${A}/${task.risk === "high" ? "task-risk-high.svg" : task.risk === "medium" ? "task-risk-medium.svg" : `risk-${task.risk}.svg`}`} alt="" />}{task.title}</p><small>订单号：{task.order} <img src={`${A}/copy.svg`} alt="复制" /></small></button>; })}</div>
+      </section>
+      <DetailPanel detailTab={detailTab} onTab={setDetailTab} selected={selected} />
+    </section>
+  </main>;
+}
+
+function ChatHome({ menuOpen }: { menuOpen: boolean }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(menuOpen);
+  return <main className="task-app chat-home"><aside className="side-rail"><img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" /><RailButtons /><img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" /></aside><header className="topbar"><button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="chat" />}<div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input placeholder="搜索历史对话" /></div><button className="settings chat-settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button></header><div className="chat-content"><img className="chat-logo" src="/benben-live.gif" alt="犇犇" /><h1>Hi，今天想和哪位专家聊聊?</h1><div className="expert-cards"><ExpertCard image="/chat-insight-expert.png" title="退货退款洞察专家" text="深入分析全店售后经营指标、退货退款多维归因与 CSAT 体验大盘，自动生成一键诊断报告与改善策略。" items={["退款原因智能归因与 CSAT / NPS 诊断", "售后数据大盘周报/月报一键导出", "极速退款策略与高频退货风险预警"]} /><ExpertCard image="/chat-ipaas-expert.png" title="iPaaS三方平台对接专家" text="描述第三方接口信息与认证规则，助手自动生成授权对接代码、参数签名与接口编排配置。" items={["标准接口对接模板与自动解析", "OAuth 2.0 / API Key / Basic Auth / JWT 鉴权代码", "多语言 SDK 封装与自动接口配置输出"]} /></div><p className="chat-footnote">支持在对话中随时切换不同专家，会话状态自动为您保存</p></div></main>;
+}
+
+function ExpertCard({ image, title, text, items }: { image: string; title: string; text: string; items: string[] }) {
+  return <article className="chat-card"><header><img src={image} alt="" /><strong>{title}</strong></header><p>{text}</p><ul>{items.map((item) => <li key={item}><img src={`${A}/complete.svg`} alt="" />{item}</li>)}</ul></article>;
+}
+
+function ProductMenu({ current }: { current: "task" | "chat" }) {
+  return <div className="product-menu"><button type="button" className={current === "task" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1493")}>犇犇Task<small>专业任务，高效完成处理</small>{current === "task" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button><button type="button" className={current === "chat" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1392")}>犇犇Chat<small>对话专家，获取极致协与方案</small>{current === "chat" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button></div>;
+}
+
+const expertCatalog = [
+  ["退款退款专家", "退货退款专家", "system-refund.png", "跟进售后物流流转状态，辅助退款审核研判，精准识别退货退款诉求。"],
+  ["纠纷处理专家", "纠纷处理专家", "system-dispute.png", "汇总会话记录与凭证资料，自动判定纠纷风险等级，给出事件全貌。"],
+  ["羊毛党风控专家", "羊毛党风控专家", "system-risk.png", "识别并防御各类恶意售后行为，归集整理纠纷举证材料。"],
+  ["送装一体专家", "送装一体专家", "system-delivery.png", "智能调配配送安装服务资源，跟进上门履约全流程进度。"],
+  ["维修诊断专家", "维修诊断专家", "system-repair.png", "面向售后维修场景，调度安排服务资源，保障维修诊断服务。"],
+  ["交易风控专家", "交易风控专家", "system-transaction.png", "识别交易欺诈异常风险，校验各类费用合理性，守护商家交易安全。"],
+  ["评价管理专家", "评价管理专家", "system-review.png", "统筹用户评价运营，跟进卖控负面反馈，保障评价相关舆情。"],
+  ["会话分析专家", "会话分析专家", "system-conversation.png", "解析消费者沟通会话内容，自动校验业务逻辑信息。"],
+] as const;
+
+type Expert = (typeof expertCatalog)[number];
+type RecruitmentConfig = { shops: string[]; departments: string[]; members: string[] };
+
+function ExpertHub({ onBack, section }: { onBack: () => void; section: string }) {
+  const [view, setView] = useState<"cards" | "list">("cards");
+  const [selected, setSelected] = useState<Expert | null>(null);
+  const [customExperts, setCustomExperts] = useState<Expert[]>([]);
+  const [filter, setFilter] = useState("全部");
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<(typeof experts)[number] | null>(null);
-  const [hired, setHired] = useState<string[]>([]);
-  const [toast, setToast] = useState("");
+  const [workspaceExpert, setWorkspaceExpert] = useState<Expert | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [tab, setTab] = useState("我的简介");
+  const [recruitedIds, setRecruitedIds] = useState<string[]>([]);
+  const [recruitConfigs, setRecruitConfigs] = useState<Record<string, RecruitmentConfig>>({});
+  const isCustom = (expert: Expert) => customExperts.some(([id]) => id === expert[0]);
+  const isRecruited = (expert: Expert) => isCustom(expert) || recruitedIds.includes(expert[0]);
+  const allExperts = [...expertCatalog, ...customExperts];
+  const visibleExperts = allExperts.filter((expert) => (filter === "全部" || (filter === "自定义" && isCustom(expert)) || (filter === "系统专家" && !isCustom(expert))) && `${expert[1]}${expert[3]}`.includes(query.trim()));
+  if (workspaceExpert) return <CustomExpertWorkspace expert={workspaceExpert} onBack={() => setWorkspaceExpert(null)} />;
+  return <main className="expert-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a className={section === "experts" ? "on" : ""} href="/?design=1404-1493&expert=1">专家</a><a className={section === "skills" ? "on" : ""} href="/?design=1404-1493&expert=1&section=skills">技能</a></header>{section === "skills" ? <SkillsCenter /> : <section className="expert-hub-body"><div className="expert-toolbar"><nav>{["全部", "系统专家", "自定义"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}</nav><div className="expert-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索专家" /></label><button className="new-expert" type="button" onClick={() => setCreateOpen(true)}>＋ 创建犇犇专家</button></div></div><div className={`expert-grid ${view}`}>{visibleExperts.map((expert) => { const custom = isCustom(expert); const recruited = isRecruited(expert); const openSystem = () => { setTab("我的简介"); setSelected(expert); }; return <article className={`expert-tile ${recruited ? "recruited" : "unrecruited"} ${custom ? "custom-expert" : "system-expert"}`} onClick={custom ? () => setWorkspaceExpert(expert) : openSystem} onKeyDown={(event) => { if (event.key === "Enter") custom ? setWorkspaceExpert(expert) : openSystem(); }} role="button" tabIndex={0} key={expert[0]}><header><img src={`${A}/${expert[2]}`} alt="" /><div><strong>{expert[1]}</strong><em>{custom ? "自定义" : "系统专家"}</em></div>{recruited ? <span>✓ 已招募</span> : <span className="recruit-label"><i>未招募</i><b>去招募　→</b></span>}</header><p>{expert[3]}</p>{custom && <span className="open-config">打开配置　→</span>}</article>; })}</div>{filter === "自定义" && !customExperts.length && <p className="custom-empty">还没有自定义专家，点击右上角创建一个吧。</p>}</section>}{createOpen && <CreateExpertModal onClose={() => setCreateOpen(false)} onContinue={(expert) => { setCustomExperts((all) => all.some(([id]) => id === expert[0]) ? all : [...all, expert]); setFilter("自定义"); setCreateOpen(false); setWorkspaceExpert(expert); }} />}{selected && <RecruitModal expert={selected} tab={tab} setTab={setTab} recruited={recruitedIds.includes(selected[0])} config={recruitConfigs[selected[0]]} onConfigChange={(config) => setRecruitConfigs((all) => ({ ...all, [selected[0]]: config }))} onClose={() => setSelected(null)} onRecruit={() => { setRecruitedIds((ids) => ids.includes(selected[0]) ? ids : [...ids, selected[0]]); setSelected(null); }} onCancelRecruit={() => { setRecruitedIds((ids) => ids.filter((id) => id !== selected[0])); setSelected(null); }} />}</main>;
+}
 
-  const filtered = useMemo(() => experts.filter((expert) => {
-    const inCategory = category === "全部" || expert.category === category;
-    const matches = `${expert.name}${expert.role}${expert.tags.join("")}`.includes(query.trim());
-    return inCategory && matches;
-  }), [category, query]);
+function CustomExpertWorkspace({ expert, onBack }: { expert: Expert; onBack: () => void }) {
+  const [resourceTab, setResourceTab] = useState("店铺");
+  const [workTab, setWorkTab] = useState("工作规划");
+  const [published, setPublished] = useState(false);
+  const [name, setName] = useState(expert[1]);
+  const [description, setDescription] = useState(expert[3]);
+  const [editingName, setEditingName] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [orderNo, setOrderNo] = useState("");
+  const [testedOrder, setTestedOrder] = useState("69251471071587401");
+  const [plan, setPlan] = useState(`### 角色定义\n你是一名${expert[1]}，专门处理以下场景：\n\n消费者申请退货退款时，交叉比对订单、客服会话与仓库收货信息，判断差异是否合理，并给出清晰的处理建议。\n\n### 核心判定逻辑\n1. 核验消费者反馈、商品状态和沟通记录是否支持当前诉求。\n2. 对比订单、仓库收货和售后工单，识别可能存在的少发、破损或退款风险。\n3. 输出同意退款、拒绝退款或转人工处理的明确建议。\n\n### 输入信息清单\n- 售后单号、退款状态和申请说明\n- 订单商品、仓库收货信息与客服会话\n- 消费者标签与历史售后记录`);
+  const shops = ["犇犇抖音旗舰店", "犇犇抖音官方旗舰店", "犇犇抖音优选旗舰店", "犇犇抖音渠道专卖店"];
+  return <main className="custom-workspace"><PlatformRail /><header className="workspace-back"><button type="button" onClick={onBack}>← 返回犇犇专家</button></header><div className="workspace-title"><h1>Hi，把任务交给我吧</h1><b>BEN<br />EXPERT</b></div><section className="workspace-layout"><aside className="workspace-profile"><header><img src={`${A}/${expert[2]}`} alt="" /><div className="editable-profile">{editingName ? <input value={name} onChange={(event) => setName(event.target.value)} onBlur={() => setEditingName(false)} autoFocus /> : <h2 onClick={() => setEditingName(true)}>{name} <span>⌑</span></h2>}<time>更新时间：2026-08-20 15:28:00</time></div></header>{editingDescription ? <div className="description-edit-wrap"><textarea className="editable-description" value={description} onChange={(event) => setDescription(event.target.value)} onBlur={() => setEditingDescription(false)} autoFocus maxLength={200} /><small>{description.length} / 200</small></div> : <p className="editable-description" onClick={() => setEditingDescription(true)}>{description || "请输入工作内容描述"}<span>⌑ 点击修改</span><small>{description.length} / 200</small></p>}<nav>{["店铺", "客服组", "技能", "工作表"].map((item) => <button className={resourceTab === item ? "on" : ""} onClick={() => setResourceTab(item)} type="button" key={item}>{item}</button>)}</nav><WorkspaceResources tab={resourceTab} shops={shops} /><section className="context-panel"><header><b>上下文</b><span>自定义上下文</span></header><nav>{["消费者标签", "订单", "售后单", "OMS", "aaa测试", "补发商品…", "抖音-售…", "会话智能…"].map((item, index) => <button className={index === 0 ? "on" : ""} type="button" key={item}>{item}</button>)}</nav><div className="context-box"><strong>消费者标签　⌄</strong><p>• 新客　　　　• aku测试标签名…</p><p>• 老客　　　　• 高频退款</p><p>• 风险用户　　• 售后偏好</p></div></section></aside><section className="workspace-editor"><header><nav>{["工作规划", "流程预览", "工作测试"].map((item) => <button className={workTab === item ? "on" : ""} onClick={() => setWorkTab(item)} type="button" key={item}>{item}</button>)}</nav><div><button type="button">查看历史版本</button><button type="button">保存草稿</button><button className="publish" type="button" onClick={() => { setPublished(true); onBack(); }}>{published ? "✓ 已发布" : "发布"}</button></div></header>{workTab === "工作规划" ? <div className="plan-editor"><textarea value={plan} onChange={(event) => setPlan(event.target.value)} /><small>{plan.length}/5000</small></div> : workTab === "流程预览" ? <div className="work-placeholder"><strong>工作流程预览</strong><p>接收任务 → 获取订单与上下文 → {name}分析 → 输出处理建议</p></div> : <section className="test-panel"><aside><h3>调试运行</h3><input value={orderNo} onChange={(event) => setOrderNo(event.target.value)} placeholder="输入订单号" /><button className="run-test" type="button" onClick={() => setTestedOrder(orderNo || "69251471071587401")}>▷　运行</button><hr /><h3>历史调试</h3><label>⌕　<input placeholder="搜索订单号" /></label>{[testedOrder, "69251471071587401", "69251471071587401", "69251471071587401", "69251471071587401"].map((item, index) => <button className={index === 0 ? "test-history on" : "test-history"} type="button" onClick={() => setTestedOrder(item)} key={`${item}-${index}`}><b>{item}</b><small>2026-05-07 10:12:46</small></button>)}</aside><main><header><h3>推理结果 <small>最近运行：2026-05-07 10:12:46</small></h3></header><p className="test-note">ⓘ 配置事件及运行仅用作推理结果展示，不触发任何真实的外部动作～</p><article className="test-result"><header><b>抖音退货退款-入库异常商品核实</b><time>2026-05-07 10:12:46</time><button type="button">▷ 过程回放</button></header><h4>工单创建</h4><p>① 识别自动退款成功状态</p><p>② 任务直接归档</p><div>售后单（147471644942854774）当前状态为【自动】退款成功，退款流程已完结。根据审核规则，已完成状态的售后单无需进行仓库异常核对及后续审核操作，任务已自动结束归档。</div></article></main></section>}</section></section></main>;
+}
 
-  const hire = (expert: (typeof experts)[number]) => {
-    setHired((items) => items.includes(expert.id) ? items : [...items, expert.id]);
-    setToast(`${expert.name} 已加入你的数字团队`);
-    setSelected(null);
-    window.setTimeout(() => setToast(""), 2600);
+function ShopPlatformIcon({ shop }: { shop: string }) {
+  if (shop.includes("抖音")) return <img className="shop-platform-icon douyin" src={`${A}/douyin-account.svg`} alt="抖音" />;
+  if (shop.includes("快手")) return <img className="shop-platform-icon" src={`${A}/kuaishou-store.svg`} alt="快手" />;
+  if (shop.includes("京东")) return <img className="shop-platform-icon" src={`${A}/jd-store.svg`} alt="京东" />;
+  if (shop.includes("小米")) return <img className="shop-platform-icon" src={`${A}/xiaomi-store.svg`} alt="小米" />;
+  if (shop.includes("有赞")) return <img className="shop-platform-icon" src={`${A}/youzan-store.svg`} alt="有赞" />;
+  return <span className="shop-platform-icon commerce" aria-label="电商">电商</span>;
+}
+
+function WorkspaceResources({ tab, shops }: { tab: string; shops: string[] }) {
+  if (tab === "店铺") return <section className="resource-content"><h3>已绑定店铺（4） <button type="button">管理</button></h3>{shops.map((shop) => <div className="resource-row shop-row" key={shop}><ShopPlatformIcon shop={shop} />{shop}</div>)}</section>;
+  if (tab === "客服组") return <section className="resource-content"><h3>客服组 <button type="button">管理</button></h3><div className="resource-switch"><b>部门（3）</b><span>成员（10）</span></div><div className="team-tags">{["抖音售前接待组", "抖音售后接待组", "退货退款组", "售后质检组"].map((team) => <i key={team}>{team}</i>)}</div></section>;
+  if (tab === "技能") return <section className="resource-content"><h3>已关联技能（3） <button type="button">管理</button></h3>{["消费者标签", "订单信息", "售后单查询"].map((skill) => <div className="resource-row" key={skill}>✦　{skill}<span>已启用</span></div>)}</section>;
+  return <section className="resource-content"><h3>工作表 <button type="button">管理</button></h3>{["售后处理工作表", "退款风险判断工作表"].map((sheet) => <div className="resource-row" key={sheet}>▣　{sheet}</div>)}</section>;
+}
+
+function CreateExpertModal({ onClose, onContinue }: { onClose: () => void; onContinue: (expert: (typeof expertCatalog)[number]) => void }) {
+  const [name, setName] = useState("");
+  const [work, setWork] = useState("");
+  return <div className="modal-layer"><section className="create-expert-modal"><button className="close" type="button" onClick={onClose}>×</button><img src={`${A}/benben.png`} alt="犇犇" /><h1>Hi，把任务交给我吧</h1><label>专家名称<input value={name} onChange={(event) => setName(event.target.value)} placeholder="请输入专家名称" autoFocus /></label><label>工作内容<textarea value={work} onChange={(event) => setWork(event.target.value)} maxLength={200} placeholder="例如：识别高风险退款申请，降低资损，同时减少对正常消费者的误判。" /></label><small>{work.length} / 200</small><button className="create-continue" type="button" disabled={!name.trim()} onClick={() => onContinue([name.trim(), name.trim(), "benben.png", work.trim() || "根据业务目标自动分析任务、识别风险并输出处理建议。"])}>更多配置　→</button></section></div>;
+}
+
+const skills = [
+  ["更新工单状态", "本接口用于更新工作表中任务状态组件"], ["拒绝原因码查询", "退货退款拒绝时，需要先查询这个接口获取拒绝原因 code"], ["退货退款-人工已处理", "当客服或系统需要对售后工单做出处理决策时调用—用户申请退款。"], ["退货退款-同意退款", "当客服或系统需要对售后工单做出处理决策时调用—用户申请退款。"], ["辅助回填-会员基本信息", "辅助回填会员基本信息。"], ["退货退款-拒绝退款", "当客服或系统需要对售后工单做出处理决策时调用—用户申请退款。"], ["通用-订单备注", "本接口用于在电商平台上为特定订单添加或更新备注信息和状态策略。"], ["退货退款操作", "当客服或系统需要对售后工单做出处理决策时调用，常见场景包括人工处理。"],
+] as const;
+
+function SkillsCenter() {
+  const [view, setView] = useState<"list" | "cards">("list");
+  const [query, setQuery] = useState("");
+  const filtered = skills.filter(([name, description]) => `${name}${description}`.includes(query));
+  return <section className="skill-center"><div className="skill-toolbar"><h1>技能中心</h1><div className="skill-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="请输入技能名称" /></label><button className="query" type="button">查询</button><button className="reset" type="button" onClick={() => setQuery("")}>重置</button><button className="add-skill" type="button">＋ 添加关联技能</button></div></div><div className={`skill-grid ${view}`}>{[...filtered, ...filtered].slice(0, view === "list" ? filtered.length : 12).map(([name, description], index) => <article key={`${name}-${index}`}><div className="skill-mark">✦</div><div><strong>{name}</strong><p>{description}</p></div><button aria-label={`编辑 ${name}`} type="button"><img src={`${A}/edit.svg`} alt="" /></button></article>)}</div></section>;
+}
+
+function RailButtons() { return <><nav>{nav.slice(0, 6).map(([icon, label], index) => <button className={index === 1 ? "selected" : ""} type="button" key={label}><img src={`${A}/${icon}`} alt="" /><span>{label}</span></button>)}</nav><nav className="rail-bottom-nav">{nav.slice(6).map(([icon, label]) => <button type="button" key={label}><img src={`${A}/${icon}`} alt="" /><span>{label}</span></button>)}</nav></>; }
+function PlatformRail() { return <aside className="side-rail"><img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" /><RailButtons /><img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" /></aside>; }
+
+function RecruitModal({ expert, tab, setTab, recruited, config, onConfigChange, onClose, onRecruit, onCancelRecruit }: { expert: Expert; tab: string; setTab: (value: string) => void; recruited: boolean; config?: RecruitmentConfig; onConfigChange: (config: RecruitmentConfig) => void; onClose: () => void; onRecruit: () => void; onCancelRecruit: () => void }) {
+  const [manager, setManager] = useState<"shops" | "team" | null>(null);
+  const [shops, setShops] = useState<string[]>(config?.shops ?? []);
+  const [departments, setDepartments] = useState<string[]>(config?.departments ?? []);
+  const [members, setMembers] = useState<string[]>(config?.members ?? []);
+  const [resourceView, setResourceView] = useState<"部门" | "成员">("部门");
+  const [teamView, setTeamView] = useState<"部门" | "成员">("部门");
+  const [draftShops, setDraftShops] = useState<string[]>([]);
+  const [draftDepartments, setDraftDepartments] = useState<string[]>([]);
+  const [draftMembers, setDraftMembers] = useState<string[]>([]);
+  const shopOptions = ["【抖音】犇犇旗舰店", "【快手】Y·X852", "【虚店】【测试京东自营】犇犇小店", "【小米有品】七宝小米有品1", "【有赞】云测试店铺SFgOM", "【京东自营(犇犇)】京东测试自营店铺"];
+  const departmentOptions = ["售后客服组", "退款审核组", "风险处理组"];
+  const memberOptions = ["朱迪", "朱迪5195", "客服小陈", "售后小吴", "质检小王", "犇犇客服A"];
+  const openManager = (kind: "shops" | "team") => {
+    setManager(kind);
+    setDraftShops(shops);
+    setDraftDepartments(departments);
+    setDraftMembers(members);
+    setTeamView("部门");
   };
-
-  return (
-    <main className="app-shell direction-brand">
-      <aside className="rail" aria-label="一级导航">
-        <button className="brand-mark" aria-label="犇犇AI首页"><span>犇</span></button>
-        <div className="rail-group">
-          <button className="rail-item"><span>⌂</span><small>首页</small></button>
-          <button className="rail-item active"><span>●</span><small>犇犇</small></button>
-          <button className="rail-item"><span>◫</span><small>消费者</small></button>
-          <button className="rail-item"><span>⌁</span><small>小程序</small></button>
-          <button className="rail-item"><span>◇</span><small>罗盘</small></button>
-          <button className="rail-item"><span>⌘</span><small>安维</small></button>
-        </div>
-        <div className="rail-spacer" />
-        <button className="rail-item"><span>⌕</span><small>搜索</small></button>
-        <button className="rail-avatar" aria-label="个人中心">米</button>
-      </aside>
-
-      <aside className="section-nav">
-        <div className="product-title">
-          <span className="mini-logo">犇</span>
-          <div><strong>犇犇AI</strong><small>数字员工工作台</small></div>
-        </div>
-        <p className="section-eyebrow">数字团队</p>
-        <nav>
-          {navItems.map((item) => (
-            <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}>
-              <span>{item.icon}</span>{item.label}
-              {item.id === "workbench" && <b>3</b>}
-            </button>
-          ))}
-        </nav>
-        <div className="nav-divider" />
-        <p className="section-eyebrow">团队管理</p>
-        <nav className="secondary-links">
-          <button><span>▦</span>专家考核</button>
-          <button><span>◇</span>入职资料</button>
-          <button><span>⚙</span>团队设置</button>
-        </nav>
-        <div className="nav-insight">
-          <span>本周团队进展</span>
-          <strong>节省 42.5 小时</strong>
-          <div><i style={{ width: "72%" }} /></div>
-          <small>比上周多释放 8.2 小时</small>
-        </div>
-      </aside>
-
-      <section className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="breadcrumb">犇犇AI / {view === "market" ? "招聘大厅" : view === "profile" ? "专家档案" : "协同工作台"}</span>
-          </div>
-          <div className="top-actions">
-            <span className="design-badge">品牌克制版</span>
-            <button className="icon-button" aria-label="帮助">?</button>
-            <button className="user-pill"><span>田</span>天成</button>
-          </div>
-        </header>
-
-        {view === "market" && (
-          <MarketPage
-            query={query}
-            setQuery={setQuery}
-            category={category}
-            setCategory={setCategory}
-            experts={filtered}
-            hired={hired}
-            onSelect={setSelected}
-            onHire={hire}
-          />
-        )}
-        {view === "profile" && <ProfilePage />}
-        {view === "workbench" && <WorkbenchPage />}
-      </section>
-
-      {selected && <ExpertModal expert={selected} hired={hired.includes(selected.id)} onClose={() => setSelected(null)} onHire={() => hire(selected)} />}
-      {toast && <div className="toast" role="status"><span>✓</span>{toast}</div>}
+  const toggle = (value: string) => {
+    const update = (items: string[]) => items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
+    if (manager === "shops") setDraftShops(update);
+    else if (teamView === "部门") setDraftDepartments(update);
+    else setDraftMembers(update);
+  };
+  const options = manager === "shops" ? shopOptions : teamView === "部门" ? departmentOptions : memberOptions;
+  const draft = manager === "shops" ? draftShops : teamView === "部门" ? draftDepartments : draftMembers;
+  const saveSelection = () => {
+    if (manager === "shops") { setShops(draftShops); onConfigChange({ shops: draftShops, departments, members }); }
+    else { setDepartments(draftDepartments); setMembers(draftMembers); onConfigChange({ shops, departments: draftDepartments, members: draftMembers }); }
+    setManager(null);
+  };
+  const configured = shops.length > 0 && (departments.length > 0 || members.length > 0);
+  const complete = () => { if (configured) onRecruit(); };
+  const teamItems = resourceView === "部门" ? departments : members;
+  return <div className="modal-layer"><section className="expert-detail-modal system-detail">
+    <button className="close" onClick={onClose} type="button">×</button>
+    <aside><img src={`${A}/${expert[2]}`} alt="" /><h2>{expert[1]}专家</h2><small>v20260817–001</small><p>犇犇·履约Agent「{expert[1]}」专家，是面向电商售后场景的全流程智能履约引擎。</p>{recruited ? <><b className="recruited-badge">✓ 已招募</b><button type="button" className="cancel-recruit" onClick={onCancelRecruit}>取消招募</button></> : <button type="button" className={`recruit-status ${configured ? "ready" : ""}`} disabled={!configured} onClick={complete}>{configured ? "确认招募" : "请先配置店铺与成员"}</button>}</aside>
+    <main><nav>{["我的简介", "技能", "工作规划", "店铺与成员"].map((item) => <button className={tab === item ? "on" : ""} onClick={() => setTab(item)} type="button" key={item}>{item}</button>)}</nav>
+      {tab === "我的简介" && <section className="system-copy"><h3>服务体验与风险诊断复盘</h3><p>针对待办退货退款工单进行服务体验与风险诊断复盘。</p><h3>信息收集梳理</h3><p>收集订单、客户聊天、退货相关资料，还原事件完整经过并关注最终处理结果。</p><h3>风险与问题识别</h3><p>排查服务环节存在的问题及潜在风险点，对关键风险做重点标记。</p><h3>资料整理归档</h3><p>整理沟通截图、聊天记录、订单备注与退款情况，完整保留原始信息。</p></section>}
+      {tab === "技能" && <section className="system-skills">{["退款金额一致性校验", "售后时效自动计算", "退货入库差异分析", "聊天记录结构化解析"].map((skill) => <article key={skill}><div className="system-skill-mark" aria-hidden="true">✦</div><div><strong>{skill}</strong><p>自动处理关键业务信息，输出清晰、可追溯的判断结果。</p></div></article>)}</section>}
+      {tab === "工作规划" && <section className="system-copy"><h3>自动化运营排班与决策触发规则</h3><p>该专家按预设的工作规划自动执行。系统专家的规则、技能与工作规划均为只读内容。</p><div className="skill-row">服务响应时段 <b>7×24小时 实时在线</b></div><div className="skill-row">自动升单阈值 <b>赔偿金额 &gt; ¥100.00</b></div></section>}
+      {tab === "店铺与成员" && <section className="system-resources"><header><h3>关联店铺 <i>*</i></h3>{shops.length > 0 && <button type="button" onClick={() => openManager("shops")}>管理</button>}</header>{shops.length ? <><div className="resource-chip-grid">{shops.map((shop) => <div className="resource-row shop-row" key={shop}><ShopPlatformIcon shop={shop} />{shop}</div>)}</div><small className="resource-page">1　/　{shops.length}</small></> : <button className="resource-empty" type="button" onClick={() => openManager("shops")}>＋　配置关联店铺</button>}<header><h3>关联客服组与团队 <i>*</i></h3>{(departments.length > 0 || members.length > 0) && <button type="button" onClick={() => openManager("team")}>管理</button>}</header>{departments.length || members.length ? <><div className="resource-switch"><button type="button" className={resourceView === "部门" ? "on" : ""} onClick={() => setResourceView("部门")}>部门（{departments.length}）</button><button type="button" className={resourceView === "成员" ? "on" : ""} onClick={() => setResourceView("成员")}>成员（{members.length}）</button></div><div className="team-tags">{teamItems.length ? teamItems.map((item) => <i key={item}>{item}</i>) : <small>暂未选择{resourceView}</small>}</div></> : <button className="resource-empty" type="button" onClick={() => openManager("team")}>＋　配置关联客服组与成员</button>}</section>}
     </main>
-  );
+    {manager && <div className="manager-layer"><section className="resource-manager"><button className="close" type="button" onClick={() => setManager(null)}>×</button><header className="manager-title"><h2>{manager === "shops" ? "关联店铺" : "关联客服组与成员"}</h2><p className="manager-help">选择需要由该专家处理的{manager === "shops" ? "店铺" : "客服团队与成员"}，确认后将保存到当前配置。</p></header>{manager === "team" && <div className="manager-tabs"><button type="button" className={teamView === "部门" ? "on" : ""} onClick={() => setTeamView("部门")}>部门</button><button type="button" className={teamView === "成员" ? "on" : ""} onClick={() => setTeamView("成员")}>成员</button></div>}<label className="manager-search"><img src={`${A}/search-expert.svg`} alt="" /><input placeholder={manager === "shops" ? "搜索店铺名称" : teamView === "部门" ? "搜索部门名称" : "搜索成员名称"} /></label><h3 className="manager-list-title">{manager === "shops" ? "店铺名称" : `${teamView}名称`}<span>{draft.length}/{options.length}</span></h3><div className="manager-scroll-area">{options.map((option) => <label className="manager-option" key={option}><input type="checkbox" checked={draft.includes(option)} onChange={() => toggle(option)} />{option}</label>)}</div><footer className="manager-footer"><button className="manager-confirm" type="button" disabled={manager === "shops" ? !draftShops.length : !draftDepartments.length && !draftMembers.length} onClick={saveSelection}>确认选择</button></footer></section></div>}
+  </section></div>;
 }
 
-function MarketPage({ query, setQuery, category, setCategory, experts: cards, hired, onSelect, onHire }: {
-  query: string;
-  setQuery: (value: string) => void;
-  category: string;
-  setCategory: (value: string) => void;
-  experts: typeof experts;
-  hired: string[];
-  onSelect: (expert: (typeof experts)[number]) => void;
-  onHire: (expert: (typeof experts)[number]) => void;
-}) {
-  const categories = ["全部", "售后服务", "店铺运营", "内容营销", "团队协作"];
-  return (
-    <div className="page market-page">
-      <section className="market-hero">
-        <div className="hero-copy">
-          <span className="hero-kicker">数字专家招聘大厅</span>
-          <h1>今天，想让哪位专家<br />帮团队轻松一点？</h1>
-          <p>说出你想解决的工作，我们会推荐能立即上岗的数字员工。</p>
-          <label className="hero-search">
-            <span>⌕</span>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="试试搜索：处理退款、生成活动文案…" />
-            <kbd>⌘ K</kbd>
-          </label>
-          <div className="quick-needs">
-            <span>最近大家在找</span>
-            <button onClick={() => setQuery("退款")}>高峰期退款处理</button>
-            <button onClick={() => setQuery("内容")}>活动内容生成</button>
-          </div>
-        </div>
-        <div className="hero-visual" aria-hidden="true">
-          <span className="spark spark-one">✦</span>
-          <span className="spark spark-two">✦</span>
-          <div className="hero-bubble bubble-one"><i>✓</i>工作交付更稳定</div>
-          <div className="hero-bubble bubble-two"><i>↗</i>每天释放 3.5 小时</div>
-          <div className="hero-image-wrap">
-            <img src="/expert-navigator.png" alt="" />
-          </div>
-        </div>
-      </section>
-
-      <section className="market-content">
-        <div className="section-heading">
-          <div><span>官方精选</span><h2>为你的业务挑一位合拍的专家</h2><p>能力已经过验证，入职后仍可按团队习惯继续培养。</p></div>
-          <button className="text-button">查看全部 18 位 <span>→</span></button>
-        </div>
-        <div className="category-tabs" role="tablist">
-          {categories.map((item) => <button key={item} className={item === category ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}
-        </div>
-        <div className="expert-grid">
-          {cards.map((expert) => (
-            <article className={`expert-card ${expert.tint}`} key={expert.id}>
-              <button className="card-main" onClick={() => onSelect(expert)} aria-label={`查看${expert.name}的简历`}>
-                <div className="expert-portrait"><img src={expert.image} alt={`${expert.name}形象`} /></div>
-                <div className="expert-info">
-                  <div className="expert-meta"><span className="official">官方专家</span><span>{expert.fit} 岗位适配</span></div>
-                  <h3>{expert.name}</h3>
-                  <strong>{expert.role}</strong>
-                  <p>{expert.intro}</p>
-                  <div className="tags">{expert.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                </div>
-              </button>
-              <footer><span><i className="online-dot" />{expert.used}</span><button className={hired.includes(expert.id) ? "hired" : ""} onClick={() => onHire(expert)}>{hired.includes(expert.id) ? "已在团队" : "邀请加入"}</button></footer>
-            </article>
-          ))}
-        </div>
-        {cards.length === 0 && <div className="empty-state"><span>⌕</span><h3>暂时没找到合适的专家</h3><p>换个更简单的工作描述试试，我们会继续帮你找。</p></div>}
-      </section>
-    </div>
-  );
+function FilterPanel({ risk, onRisk }: { risk: string; onRisk: (value: string) => void }) {
+  const risks = [["high", "高风险", 2], ["medium", "中风险", 13], ["low", "低风险", 0], ["other", "其他", 132]] as const;
+  const [expertType, setExpertType] = useState("服务履约");
+  const [activeQueue, setActiveQueue] = useState("processing");
+  const chooseQueue = (queue: string) => { setActiveQueue(queue); onRisk(queue === "processing" ? "全部" : queue); };
+  return <aside className="filters"><h2>任务中心</h2><button type="button" className={`processing ${activeQueue === "processing" ? "on" : ""}`} onClick={() => chooseQueue("processing")}><img src={`${A}/ongoing-task.svg`} alt="" />进行中 <b>147</b></button><div className="risk-options">{risks.map(([key, label, number]) => <button type="button" onClick={() => chooseQueue(key)} className={activeQueue === key ? "on" : ""} key={key}><img src={`${A}/risk-${key}.svg`} alt="" />{label}<b>{number}</b></button>)}</div><div className="expert-type"><span>专家类型</span></div><div className="expert-tabs">{["服务履约", "自定义"].map((item) => <button type="button" className={expertType === item ? "on" : ""} onClick={() => setExpertType(item)} key={item}>{item}</button>)}</div><div className="expert-list">{experts.map(([image, title]) => <button type="button" key={title}><img src={`${A}/${image}`} alt="" />{title}</button>)}</div><button className="unmatched" type="button"><img src={`${A}/unmatched.svg`} alt="" />未匹配任务记录 <b>35</b></button></aside>;
 }
 
-function ProfilePage() {
-  const [step, setStep] = useState(1);
-  const [advanced, setAdvanced] = useState(false);
-  const [chat, setChat] = useState("");
-  const [messages, setMessages] = useState<string[]>(["你好，我是朱迪。可以给我一笔退款订单，看看我会如何处理。"]);
-  const steps = [
-    { title: "专家名片", sub: "姓名、岗位与工作风格", icon: "01" },
-    { title: "工作职责", sub: "告诉她做什么、如何判断", icon: "02" },
-    { title: "专业技能", sub: "选择工作中可使用的工具", icon: "03" },
-    { title: "入职资料", sub: "补充业务知识与协作对象", icon: "04" },
-  ];
-  const send = () => {
-    if (!chat.trim()) return;
-    setMessages((items) => [...items, chat, "我会先核对订单、退货入库和沟通记录；若差异确认无误，再给出退款建议并请你确认。"]);
-    setChat("");
-  };
-  return (
-    <div className="page profile-page">
-      <div className="profile-header">
-        <div className="profile-identity">
-          <div className="profile-avatar"><img src="/expert-manager.png" alt="朱迪专家形象" /><i /></div>
-          <div><div className="title-line"><h1>朱迪</h1><span>在岗</span></div><p>售后退款审核专家 · 客服解决方案组</p><small>“把复杂的售后问题，处理得有理也有温度。”</small></div>
-        </div>
-        <div className="profile-stats"><div><strong>246</strong><span>已完成工作</span></div><div><strong>94%</strong><span>独立完成率</span></div><div><strong>4.8</strong><span>团队满意度</span></div></div>
-        <div className="header-buttons"><button className="ghost-button">预览简历</button><button className="primary-button">保存并安排上岗</button></div>
-      </div>
-
-      <div className="onboarding-banner"><div><span>✦</span><strong>入职准备度 75%</strong><p>再补充一份退款规则，朱迪就能更准确地独立处理。</p></div><button onClick={() => setStep(3)}>去补充资料 <span>→</span></button></div>
-
-      <div className="profile-layout">
-        <aside className="steps-card">
-          <div className="steps-title"><span>专家入职</span><b>3 / 4 已完成</b></div>
-          {steps.map((item, index) => (
-            <button key={item.title} className={step === index ? "active" : ""} onClick={() => setStep(index)}>
-              <span className={index < 3 ? "complete" : ""}>{index < 3 ? "✓" : item.icon}</span>
-              <div><strong>{item.title}</strong><small>{item.sub}</small></div>
-              <i>›</i>
-            </button>
-          ))}
-          <div className="advanced-link"><button onClick={() => setAdvanced(!advanced)}>⚙ 高级能力设置 <span>{advanced ? "−" : "+"}</span></button>{advanced && <div><label>推理模型<select defaultValue="auto"><option value="auto">智能选择（推荐）</option></select></label><label>自主行动上限<input type="range" defaultValue="60" /></label></div>}</div>
-        </aside>
-
-        <section className="resume-editor">
-          <div className="editor-heading"><span>02</span><div><h2>工作职责</h2><p>像给新同事做入职介绍一样，说明她要完成的工作。</p></div><button>查看填写示例</button></div>
-          <div className="form-block">
-            <div className="form-label"><div><strong>她主要负责什么？</strong><span>用一句话说清楚岗位价值</span></div><small>30 / 80</small></div>
-            <input defaultValue="审核退货退款申请，识别风险并给出清晰、稳妥的处理建议" />
-          </div>
-          <div className="form-block">
-            <div className="form-label"><div><strong>遇到一项工作时，她会怎么做？</strong><span>我们已把配置语言整理成可读的工作准则</span></div><button className="ai-button">✦ AI 帮我优化</button></div>
-            <div className="guideline-editor">
-              <div className="guideline"><span>1</span><div><strong>先了解情况</strong><p>核对订单、售后申请、仓库入库差异与客户沟通记录。</p></div><button aria-label="拖动">⋮⋮</button></div>
-              <div className="guideline"><span>2</span><div><strong>判断退款是否合理</strong><p>结合团队规则和历史记录，识别信息缺失、高风险或需要升级的情况。</p></div><button aria-label="拖动">⋮⋮</button></div>
-              <div className="guideline"><span>3</span><div><strong>给出下一步建议</strong><p>清楚说明建议同意、拒绝或补充材料，并标注判断依据。</p></div><button aria-label="拖动">⋮⋮</button></div>
-              <button className="add-guideline">＋ 添加一条工作准则</button>
-            </div>
-          </div>
-          <div className="form-block compact-block"><div className="form-label"><div><strong>她的工作风格</strong><span>决定与客户和同事协作时的表达方式</span></div></div><div className="choice-chips"><button className="active">稳妥细致</button><button>耐心友好</button><button>简洁直接</button><button>先给结论</button><button>＋ 自定义</button></div></div>
-        </section>
-
-        <aside className="preview-panel">
-          <div className="preview-heading"><div><span>●</span><strong>试岗对话</strong></div><button>清空</button></div>
-          <p className="preview-tip">给朱迪一项真实工作，立即感受她的判断与表达。</p>
-          <div className="chat-window">
-            {messages.map((message, index) => <div key={`${message}-${index}`} className={index % 3 === 1 ? "chat-user" : "chat-expert"}>{index % 3 !== 1 && <span><img src="/expert-manager.png" alt="" /></span>}<p>{message}</p></div>)}
-          </div>
-          <div className="suggestions"><button onClick={() => setChat("订单已退款但仓库少入库 1 件，应该怎么处理？")}>试试：仓库少入库 1 件</button><button onClick={() => setChat("客户情绪激动并要求立即全额退款")}>试试：客户情绪激动</button></div>
-          <div className="chat-input"><textarea value={chat} onChange={(event) => setChat(event.target.value)} placeholder="交给朱迪一项工作…" onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} /><button onClick={send} aria-label="发送">↑</button></div>
-          <small className="preview-footnote">试岗不会影响真实业务数据</small>
-        </aside>
-      </div>
-    </div>
-  );
+function DetailPanel({ detailTab, onTab, selected }: { detailTab: string; onTab: (tab: string) => void; selected: typeof taskData[number] }) {
+  const tabs = ["概览", "工单", "订单", "物流", "会话"];
+  return <section className="detail"><header><nav>{tabs.map((tab) => <button type="button" className={detailTab === tab ? "on" : ""} onClick={() => onTab(tab)} key={tab}>{tab}</button>)}</nav><button type="button" className="detail-refresh"><img src={`${A}/refresh-detail.svg`} alt="刷新" /></button></header>{detailTab === "概览" ? <div className="detail-body"><h1>{selected.detail}</h1><article className="agent-card"><div className="agent-head"><strong>退款原因分析专家 / 羊毛党风控专家</strong><span className="agent-avatars"><img src={`${A}/expert-avatar-3.png`} alt="退款原因分析专家" /><img src={`${A}/expert-avatar-4.png`} alt="羊毛党风控专家" /></span><time>2026-07-15 18:06:22</time></div><p className="muted">您想鉴别图片真伪并查询图库，但我需要您提供图片URL才能执行。请上传或提供图片链接。</p><footer><button type="button">◷ 完结任务</button><button type="button">↻ 重新执行</button><button className="ai" type="button">AI鉴图</button></footer></article><div className="order-meta"><b>交易被平台关闭</b><span>退款完结</span><span className="user-meta"><img src={`${A}/customer.svg`} alt="" />1@#z1Fzk...</span><span>订单号: 6927941774...</span><span>任务创建时间: 2026-07-...</span><b>查看详情</b></div><div className="note">⚑ 2026-07-14 16:37:42 这是一段订单备注，这是一段订单备注</div><h3 className="task-detail-heading"><img src={`${A}/task-detail.svg`} alt="" />任务详情</h3><TaskDetail name="测试Agent" /><TaskDetail name="波比退款处理Agent" /></div> : <div className="empty-detail"><img src={`${A}/task-detail.svg`} alt="" /><strong>{detailTab}信息</strong><p>当前任务的{detailTab}内容已准备就绪。</p></div>}</section>;
 }
 
-function WorkbenchPage() {
-  const [filter, setFilter] = useState("全部工作");
-  const shown = filter === "全部工作" ? tasks : filter === "需要我处理" ? tasks.filter((task) => task.tone === "warn") : tasks.filter((task) => task.tone === "run");
-  return (
-    <div className="page workbench-page">
-      <div className="page-title-row"><div><span className="hero-kicker">协同工作台</span><h1>早上好，团队正在稳稳推进</h1><p>3 位专家在岗，只有 1 项工作需要你确认。</p></div><button className="primary-button">＋ 交办新工作</button></div>
-      <section className="metric-strip">
-        <div className="metric-card main"><span>今日团队进展</span><strong>已完成 86 项工作</strong><p><i>↗</i> 比昨天提前 1.8 小时</p><div className="mini-bars"><i /><i /><i /><i /><i /><i /><i /></div></div>
-        <div className="metric-card"><span>独立完成率</span><strong>92.4%</strong><p className="good">稳定提升 3.2%</p></div>
-        <div className="metric-card"><span>为团队释放时间</span><strong>12.6 <small>小时</small></strong><p>相当于 1.6 个工作日</p></div>
-        <div className="metric-card attention"><span>需要你接力</span><strong>1 <small>项</small></strong><p>预计 2 分钟可完成</p></div>
-      </section>
-      <div className="work-layout">
-        <section className="task-board">
-          <div className="board-header"><div><h2>今天的工作</h2><span>共 3 项</span></div><div>{["全部工作", "需要我处理", "处理中"].map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div></div>
-          <div className="task-list">
-            {shown.map((task) => <article key={task.title} className={`task-row ${task.tone}`}><div className="task-status"><span>{task.tone === "done" ? "✓" : task.tone === "warn" ? "!" : "↻"}</span></div><div className="task-copy"><div><h3>{task.title}</h3><span>{task.time}</span></div><p>{task.detail}</p><div className="task-progress"><i style={{ width: `${task.progress}%` }} /></div><footer><span className={`state ${task.tone}`}>{task.state}</span><span>负责人 · {task.owner}</span></footer></div><button className={task.tone === "warn" ? "primary-small" : "more-button"}>{task.tone === "warn" ? "查看并确认" : "•••"}</button></article>)}
-          </div>
-        </section>
-        <aside className="team-panel"><div className="team-title"><h2>今天谁在忙</h2><button>查看团队</button></div>{experts.slice(0, 3).map((expert, index) => <div className="team-member" key={expert.id}><span className={`member-avatar ${expert.tint}`}><img src={expert.image} alt="" /><i /></span><div><strong>{expert.name}</strong><small>{index === 0 ? "正在审核 2 笔退款" : index === 1 ? "正在整理周报" : "等待新的工作"}</small></div><b>{index === 2 ? "空闲" : `${index + 1} 项`}</b></div>)}<div className="team-quote"><span>“</span><p>复杂任务减少了，团队更有时间做好客户沟通。</p><small>— 客服解决方案组 · 本周反馈</small></div></aside>
-      </div>
-    </div>
-  );
-}
-
-function ExpertModal({ expert, hired, onClose, onHire }: { expert: (typeof experts)[number]; hired: boolean; onClose: () => void; onHire: () => void }) {
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}><section className="expert-modal" role="dialog" aria-modal="true" aria-label={`${expert.name}的专家简历`}><button className="modal-close" onClick={onClose} aria-label="关闭">×</button><div className={`modal-hero ${expert.tint}`}><div className="modal-portrait"><img src={expert.image} alt={`${expert.name}形象`} /></div><div><span className="official">官方认证专家</span><h2>{expert.name}</h2><strong>{expert.role}</strong><p>{expert.intro}</p><div className="tags">{expert.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div></div><div className="modal-body"><div className="resume-section"><span>01</span><div><h3>适合什么时候邀请她？</h3><p>售后高峰、规则判断复杂，或团队希望减少重复核对时。她会先整理事实，再给出有依据的建议。</p></div></div><div className="resume-section"><span>02</span><div><h3>她会如何开展工作？</h3><ul><li>先核对订单、沟通与履约记录</li><li>按业务规则识别风险和信息缺口</li><li>给出清晰结论，并把需要你决定的事单独标出</li></ul></div></div><div className="resume-section"><span>03</span><div><h3>入职后你仍然掌控</h3><p>可随时调整职责、资料与权限。正式上岗前，先通过真实案例试岗。</p></div></div></div><footer><div><span>{expert.fit}</span><small>与你当前团队的岗位适配度</small></div><button className="ghost-button" onClick={onClose}>再看看</button><button className="primary-button" onClick={onHire}>{hired ? "已在团队" : "邀请加入团队"}</button></footer></section></div>;
-}
+function TaskDetail({ name }: { name: string }) { return <button type="button" className="sub-task"><b>{name}</b><span>更新时间: 2026-07-28 10:02:38</span><em>关联工单 <img src={`${A}/chevron.svg`} alt="" /></em></button>; }
