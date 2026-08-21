@@ -77,7 +77,7 @@
 
 .product-menu { position: absolute; z-index: 10; top: 39px; left: 0; width: 128px; padding: 4px 0; border: 1px solid #e6eaf0; border-radius: 5px; background: #fff; box-shadow: 0 4px 10px #0000001a; }
 .product-menu button { position: relative; width: 100%; height: 44px; padding: 5px 10px; background: transparent; text-align: left; font-size: 12px; }
-.product-menu button.current { background: #f4f5f7; }.product-menu small { display: block; margin-top: 2px; color: #a4a9b2; font-size: 9px; }.product-menu b { position: absolute; right: 8px; top: 15px; font-size: 12px; font-weight: 400; }
+.product-menu button.current { background: #f4f5f7; }.product-menu strong { display: block; font-weight: 700; }.product-menu small { display: block; margin-top: 2px; color: #a4a9b2; font-size: 9px; font-weight: 400; }.product-menu b { position: absolute; right: 8px; top: 15px; font-size: 12px; font-weight: 400; }
 
 /* 左上角产品切换：箭头与标题居中，菜单保留完整副标题。 */
 .product { display: inline-flex; align-items: center; justify-content: flex-start; gap: 10px; height: 44px; padding: 0 0 0 16px; line-height: 1; }.product > img { width: 16px; height: 16px; flex: none; }.expert-type img { width: 16px; height: 16px; transform: rotate(180deg); }.product-menu { top: 51px; width: 232px; padding: 5px 0; border-radius: 8px; }.product-menu button { height: 58px; padding: 8px 14px; font-size: 15px; }.product-menu small { margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.product-menu b { right: 14px; top: 21px; font-size: 14px; }
