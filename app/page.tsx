@@ -128,13 +128,14 @@ function ChatHome({ menuOpen }: { menuOpen: boolean }) {
     {!expert ? <ChatPicker onSelect={startConversation} /> : <section className={`chat-shell ${historyOpen ? "history-open" : ""}`}>
       <aside className="chat-history">
         <button className="history-expand" type="button" aria-label="展开历史对话" onClick={() => setHistoryOpen(true)}><span>›</span></button>
-        <div className="chat-history-brand"><img src={`${A}/benben.png`} alt="" /><strong>犇犇AI</strong></div>
-        <div className="history-home"><button type="button" onClick={() => setSelectedExpert(null)}><img src={`${A}/home.svg`} alt="" /><span>主页</span></button><button className="history-collapse" type="button" aria-label="收起历史对话" onClick={() => setHistoryOpen(false)}><i /><i /></button></div>
+        <div className="history-home"><button type="button" aria-label="主页" onClick={() => setSelectedExpert(null)}><img src={`${A}/home.svg`} alt="" /><span>主页</span></button><button className="history-collapse" type="button" aria-label="收起历史对话" onClick={() => setHistoryOpen(false)}><i /><i /></button></div>
         <div className="history-divider" />
-        <button className="history-new" type="button" onClick={() => { setStage("welcome"); setMessage(""); }}>＋ 新建会话</button>
+        <button className="history-new" type="button" onClick={() => { setStage("welcome"); setMessage(""); }}><span>＋</span><em>新建对话</em></button>
         <p>历史对话</p>
-        <button className="history-item active" type="button" onClick={() => setHistoryOpen(true)}><span className="history-message" aria-hidden="true" /><em>{expert.conversation}</em><small>刚刚</small><b>···</b></button>
-        <button className="history-item" type="button" onClick={() => setHistoryOpen(true)}><span className="history-message" aria-hidden="true" /><em>{selectedExpert === "insight" ? "上月售后数据分析" : "接口鉴权配置"}</em><small>昨天</small><b>···</b></button>
+        {stage === "welcome" ? <small className="history-empty">暂无历史对话</small> : <>
+          <button className="history-item active" type="button" onClick={() => setHistoryOpen(true)}><span className="history-message" aria-hidden="true" /><em>{expert.conversation}</em><small>刚刚</small><b>···</b></button>
+          <button className="history-item" type="button" onClick={() => setHistoryOpen(true)}><span className="history-message" aria-hidden="true" /><em>{selectedExpert === "insight" ? "上月售后数据分析" : "接口鉴权配置"}</em><small>昨天</small><b>···</b></button>
+        </>}
       </aside>
       <section className="chat-thread">
         {stage === "welcome" ? <ChatWelcome expert={expert} onPrompt={(prompt) => { setMessage(prompt); window.setTimeout(sendMessage, 0); }} /> : <ChatConversation expert={expert} stage={stage} expanded={expanded} onToggle={() => setExpanded((value) => !value)} message={message} />}
@@ -173,7 +174,7 @@ function ChatResult({ expert }: { expert: (typeof chatExperts)[ChatExpert] }) {
 }
 
 function ChatComposer({ message, setMessage, onSend }: { message: string; setMessage: (value: string) => void; onSend: () => void }) {
-  return <div className="chat-composer"><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }} placeholder="继续向我提问" /><footer><span>⌘　可使用快捷工具</span><small>数据安全防护中</small><button type="button" disabled={!message.trim()} onClick={onSend}>发送　↑</button></footer></div>;
+  return <div className="chat-composer"><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }} placeholder="继续问我更多问题" /><footer><span>快捷工具</span><button className="quick-tool" type="button">ϟ　快捷配置填充</button><small>♢ 数据安全防护中</small><button type="button" disabled={!message.trim()} onClick={onSend}>发送　→</button></footer></div>;
 }
 
 function ProductMenu({ current }: { current: "task" | "chat" }) {
