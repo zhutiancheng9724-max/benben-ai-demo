@@ -127,11 +127,13 @@ function ChatHome({ menuOpen }: { menuOpen: boolean }) {
     </header>
     {!expert ? <ChatPicker onSelect={startConversation} /> : <section className={`chat-shell ${historyOpen ? "history-open" : ""}`}>
       <aside className="chat-history">
-        <button className="history-home" type="button" onClick={() => setSelectedExpert(null)}>⌂　主页</button>
-        <button className="history-new" type="button" onClick={() => { setStage("welcome"); setMessage(""); }}>＋ 新建会话</button>
+        <div className="chat-history-brand"><img src={`${A}/benben.png`} alt="犇犇" /><strong>犇犇AI</strong></div>
+        <button className="history-home" type="button" onClick={() => setSelectedExpert(null)}><img src={`${A}/home.svg`} alt="" /><span>主页</span><b aria-hidden="true"><i /><i /></b></button>
+        <div className="history-divider" />
+        <button className="history-new" type="button" onClick={() => { setStage("welcome"); setMessage(""); }}><span aria-hidden="true">＋</span>新建会话</button>
         <p>历史对话</p>
-        <button className="history-item active" type="button">{expert.conversation}<small>刚刚</small></button>
-        <button className="history-item" type="button">{selectedExpert === "insight" ? "上月售后数据分析" : "接口鉴权配置"}<small>昨天</small></button>
+        <button className="history-item active" type="button"><span className="history-message" aria-hidden="true">▣</span><em>{expert.conversation}</em><b>···</b></button>
+        <button className="history-item" type="button"><span className="history-message" aria-hidden="true">▣</span><em>{selectedExpert === "insight" ? "选择自定义时间生成售后报告" : "生成第三方接口授权配置"}</em><b>···</b></button>
       </aside>
       <section className="chat-thread">
         <button className="history-collapse" type="button" onClick={() => setHistoryOpen((value) => !value)}>{historyOpen ? "‹" : "›"}</button>
