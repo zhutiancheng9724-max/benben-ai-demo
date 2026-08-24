@@ -80,13 +80,98 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
   </main>;
 }
 
+type ChatExpert = "insight" | "ipaas";
+type ChatStage = "welcome" | "working" | "done";
+
+const chatExperts = {
+  insight: {
+    image: "/chat-insight-expert.png", title: "退货退款洞察专家", conversation: "本周退款原因洞察报告",
+    text: "深入分析全店售后经营指标、退货退款多维归因与 CSAT 体验大盘，自动生成一键诊断报告与改善策略。",
+    items: ["退款原因智能归因与 CSAT / NPS 诊断", "售后数据大盘周报/月报一键导出", "极速退款策略与高频退货风险预警"],
+    prompts: ["帮我生成本月店铺售后经营诊断报告", "生成上一个自然月售后诊断报告", "选择自定义时间生成售后诊断报告"],
+  },
+  ipaas: {
+    image: "/chat-ipaas-expert.png", title: "iPaaS三方平台对接专家", conversation: "第三方平台对接方案",
+    text: "描述第三方接口信息与认证规则，助手自动生成授权对接代码、参数签名与接口编排配置。",
+    items: ["标准接口对接模板与自动解析", "OAuth 2.0 / API Key / Basic Auth / JWT 鉴权代码", "多语言 SDK 封装与自动接口配置输出"],
+    prompts: ["生成第三方接口授权方案", "输出 iPaaS 接口编排配置", "生成多语言 SDK 示例"],
+  },
+} as const;
+
 function ChatHome({ menuOpen }: { menuOpen: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(menuOpen);
-  return <main className="task-app chat-home"><aside className="side-rail"><img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" /><RailButtons /><img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" /></aside><header className="topbar"><button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="chat" />}<div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input placeholder="搜索历史对话" /></div><a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />犇犇专家</a><i /><button className="settings chat-settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button></header><div className="chat-content"><img className="chat-logo" src="/benben-live.gif" alt="犇犇" /><h1>Hi，今天想和哪位专家聊聊?</h1><div className="expert-cards"><ExpertCard image="/chat-insight-expert.png" title="退货退款洞察专家" text="深入分析全店售后经营指标、退货退款多维归因与 CSAT 体验大盘，自动生成一键诊断报告与改善策略。" items={["退款原因智能归因与 CSAT / NPS 诊断", "售后数据大盘周报/月报一键导出", "极速退款策略与高频退货风险预警"]} /><ExpertCard image="/chat-ipaas-expert.png" title="iPaaS三方平台对接专家" text="描述第三方接口信息与认证规则，助手自动生成授权对接代码、参数签名与接口编排配置。" items={["标准接口对接模板与自动解析", "OAuth 2.0 / API Key / Basic Auth / JWT 鉴权代码", "多语言 SDK 封装与自动接口配置输出"]} /></div><p className="chat-footnote">支持在对话中随时切换不同专家，会话状态自动为您保存</p></div></main>;
+  const [selectedExpert, setSelectedExpert] = useState<ChatExpert | null>(null);
+  const [stage, setStage] = useState<ChatStage>("welcome");
+  const [expanded, setExpanded] = useState(false);
+  const [message, setMessage] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(true);
+  const expert = selectedExpert ? chatExperts[selectedExpert] : null;
+
+  const startConversation = (kind: ChatExpert, prompt?: string) => {
+    setSelectedExpert(kind); setStage("welcome"); setExpanded(false); setMessage(prompt || "");
+  };
+  const sendMessage = () => {
+    if (!message.trim()) return;
+    setStage("working"); setExpanded(true);
+    window.setTimeout(() => setStage("done"), 1200);
+  };
+
+  return <main className="task-app chat-home">
+    <aside className="side-rail"><img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" /><RailButtons /><img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" /></aside>
+    <header className="topbar">
+      <button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>
+      {isMenuOpen && <ProductMenu current="chat" />}
+      <div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input placeholder="搜索历史对话" /></div>
+      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />犇犇专家</a><i />
+      <button className="settings chat-settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button>
+    </header>
+    {!expert ? <ChatPicker onSelect={startConversation} /> : <section className={`chat-shell ${historyOpen ? "history-open" : ""}`}>
+      <aside className="chat-history">
+        <button className="history-home" type="button" onClick={() => setSelectedExpert(null)}>⌂　主页</button>
+        <button className="history-new" type="button" onClick={() => { setStage("welcome"); setMessage(""); }}>＋ 新建会话</button>
+        <p>历史对话</p>
+        <button className="history-item active" type="button">{expert.conversation}<small>刚刚</small></button>
+        <button className="history-item" type="button">{selectedExpert === "insight" ? "上月售后数据分析" : "接口鉴权配置"}<small>昨天</small></button>
+      </aside>
+      <section className="chat-thread">
+        <button className="history-collapse" type="button" onClick={() => setHistoryOpen((value) => !value)}>{historyOpen ? "‹" : "›"}</button>
+        {stage === "welcome" ? <ChatWelcome expert={expert} onPrompt={(prompt) => { setMessage(prompt); window.setTimeout(sendMessage, 0); }} /> : <ChatConversation expert={expert} stage={stage} expanded={expanded} onToggle={() => setExpanded((value) => !value)} message={message} />}
+        <ChatComposer message={message} setMessage={setMessage} onSend={sendMessage} />
+      </section>
+    </section>}
+  </main>;
 }
 
-function ExpertCard({ image, title, text, items }: { image: string; title: string; text: string; items: string[] }) {
-  return <article className="chat-card"><header><img src={image} alt="" /><strong>{title}</strong></header><p>{text}</p><ul>{items.map((item) => <li key={item}><img src={`${A}/complete.svg`} alt="" />{item}</li>)}</ul></article>;
+function ChatPicker({ onSelect }: { onSelect: (kind: ChatExpert) => void }) {
+  return <div className="chat-content chat-picker"><img className="chat-logo" src="/benben-live.gif" alt="犇犇" /><h1>Hi，今天想和哪位专家聊聊?</h1><div className="expert-cards">{(Object.keys(chatExperts) as ChatExpert[]).map((kind) => <ExpertCard key={kind} {...chatExperts[kind]} onClick={() => onSelect(kind)} />)}</div><p className="chat-footnote">支持在对话中随时切换不同专家，会话状态自动为您保存</p></div>;
+}
+
+function ExpertCard({ image, title, text, items, onClick }: { image: string; title: string; text: string; items: readonly string[]; onClick: () => void }) {
+  return <button className="chat-card" type="button" onClick={onClick}><header><img src={image} alt="" /><strong>{title}</strong><span>开始对话　→</span></header><p>{text}</p><ul>{items.map((item) => <li key={item}><img src={`${A}/complete.svg`} alt="" />{item}</li>)}</ul></button>;
+}
+
+function ChatWelcome({ expert, onPrompt }: { expert: (typeof chatExperts)[ChatExpert]; onPrompt: (prompt: string) => void }) {
+  return <div className="chat-welcome"><img src={expert.image} alt="" /><h1>{expert.title}</h1><p>{expert.text}</p><div>{expert.prompts.map((prompt) => <button type="button" onClick={() => onPrompt(prompt)} key={prompt}>{prompt}<span>→</span></button>)}</div></div>;
+}
+
+function ChatConversation({ expert, stage, expanded, onToggle, message }: { expert: (typeof chatExperts)[ChatExpert]; stage: ChatStage; expanded: boolean; onToggle: () => void; message: string }) {
+  const doneSteps = selectedExpertSteps(expert.title, stage);
+  return <div className="conversation-wrap"><h1>{expert.conversation}</h1><div className="message-user">{message || expert.prompts[0]}</div><article className={`assistant-flow ${stage}`}><header><img src={expert.image} alt="" /><div><strong>{expert.title}</strong><small>{stage === "done" ? "已完成分析" : "正在为你整理售后数据"}</small></div><button type="button" onClick={onToggle}>{stage === "done" ? "已处理 1m 27s" : "处理中…"}<span>{expanded ? "⌃" : "⌄"}</span></button></header>{expanded && <div className="flow-steps">{doneSteps.map((step, index) => <div className={index === doneSteps.length - 1 && stage === "working" ? "running" : "complete"} key={step}><i>{index === doneSteps.length - 1 && stage === "working" ? "" : "✓"}</i>{step}{index === doneSteps.length - 1 && stage === "working" && <em>处理中</em>}</div>)}</div>}</article>{stage === "done" && <ChatResult expert={expert} />}</div>;
+}
+
+function selectedExpertSteps(title: string, stage: ChatStage) {
+  const insight = title.includes("退款");
+  const steps = insight ? ["已读取本月售后订单与退款明细", "已完成退款原因与体验指标归因", "已生成本月售后经营诊断报告"] : ["已读取第三方接口及认证信息", "已完成接口鉴权与参数签名解析", "已生成平台对接与编排配置方案"];
+  return stage === "working" ? steps.slice(0, 2) : steps;
+}
+
+function ChatResult({ expert }: { expert: (typeof chatExperts)[ChatExpert] }) {
+  const insight = expert.title.includes("退款");
+  return <article className="chat-result"><header><div><img src={expert.image} alt="" /><strong>{insight ? "本月售后经营诊断报告" : "第三方平台对接方案"}</strong></div><button type="button">查看完整报告　→</button></header><section><h2>{insight ? "退款原因洞察" : "接入建议"}</h2><p>{insight ? "本月售后退款申请主要集中在商品描述不符、物流时效与尺码问题。建议优先关注高频退款商品，并同步优化售前引导。" : "已为你整理 OAuth 2.0 鉴权、接口回调校验和参数签名方案，可直接用于后续编排配置。"}</p></section><footer>{["继续查看关键指标", "生成改善建议", "导出诊断报告"].map((item) => <button type="button" key={item}>{item}<span>→</span></button>)}</footer></article>;
+}
+
+function ChatComposer({ message, setMessage, onSend }: { message: string; setMessage: (value: string) => void; onSend: () => void }) {
+  return <div className="chat-composer"><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }} placeholder="继续向我提问" /><footer><span>⌘　可使用快捷工具</span><small>数据安全防护中</small><button type="button" disabled={!message.trim()} onClick={onSend}>发送　↑</button></footer></div>;
 }
 
 function ProductMenu({ current }: { current: "task" | "chat" }) {
