@@ -178,7 +178,7 @@ function ChatComposer({ message, setMessage, onSend }: { message: string; setMes
 }
 
 function ProductMenu({ current }: { current: "task" | "chat" }) {
-  return <div className="product-menu"><button type="button" className={current === "task" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1493")}><strong>犇犇Task</strong><small>专业任务，高效完成处理</small>{current === "task" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button><button type="button" className={current === "chat" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1392")}><strong>犇犇Chat</strong><small>对话专家，获取极致协与方案</small>{current === "chat" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button></div>;
+  return <div className="product-menu"><button type="button" className={current === "task" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1493")}><strong>犇犇Task</strong><small>端到端任务协同与履约焕新</small>{current === "task" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button><button type="button" className={current === "chat" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1392")}><strong>犇犇Chat</strong><small>对话式业务洞察与决策支持</small>{current === "chat" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button></div>;
 }
 
 const expertCatalog = [
