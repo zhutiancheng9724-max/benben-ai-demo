@@ -56,6 +56,18 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
   const shownTasks = useMemo(() => taskData.filter((task) => task.title.includes(search) && (risk === "全部" || task.risk === risk)), [risk, search]);
   const selected = taskData[activeTask];
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const closeMenu = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !target.closest(".product, .product-menu")) setIsMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setIsMenuOpen(false); };
+    document.addEventListener("mousedown", closeMenu);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("mousedown", closeMenu); document.removeEventListener("keydown", closeOnEscape); };
+  }, [isMenuOpen]);
+
   return <main className="task-app">
     <aside className="side-rail">
       <img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" />
@@ -106,6 +118,18 @@ function ChatHome({ menuOpen }: { menuOpen: boolean }) {
   const [message, setMessage] = useState("");
   const [historyOpen, setHistoryOpen] = useState(true);
   const expert = selectedExpert ? chatExperts[selectedExpert] : null;
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const closeMenu = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !target.closest(".product, .product-menu")) setIsMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setIsMenuOpen(false); };
+    document.addEventListener("mousedown", closeMenu);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("mousedown", closeMenu); document.removeEventListener("keydown", closeOnEscape); };
+  }, [isMenuOpen]);
 
   const startConversation = (kind: ChatExpert, prompt?: string) => {
     setSelectedExpert(kind); setStage("welcome"); setExpanded(false); setMessage(prompt || "");
