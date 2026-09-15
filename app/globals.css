@@ -328,8 +328,8 @@
 .expert-grid.cards .expert-tile strong { font-size: 16px; }
 .expert-grid.cards .expert-tile p { margin-top: 14px; color: #666; font-size: 13px; line-height: 21px; }
 .expert-grid.cards .expert-tile header > span { top: 22px; right: 22px; }
-.expert-management-top { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 18px; }
-.expert-management-top .expert-scope { height: 42px; align-items: center; gap: 24px; }
+.expert-management-top { display: flex; justify-content: space-between; gap: 18px; }
+.expert-management-top .expert-scope { height: 34px; align-items: center; gap: 24px; }
 .expert-product-filter { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; margin: 0; padding: 0 18px 0 0; border-right: 1px solid #e8e8e8; }
 .expert-product-filter button { height: 30px; padding: 0 12px; border-radius: 7px; background: transparent; color: #777; font-size: 14px; }
 .expert-product-filter button.on, .expert-product-filter button:hover { background: #e8e8e8; color: #202020; }
@@ -341,12 +341,23 @@
 .expert-management-top .expert-view-tools label img { width: 15px; height: 15px; opacity: .68; }
 .expert-management-top .expert-view-tools input { width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font-size: 12px; }
 .expert-management-top .new-expert { height: 36px; border-radius: 8px; background: #202020; font-size: 12px; }
-.expert-category-toolbar { display: flex; min-height: 36px; height: auto; margin-top: 8px; gap: 18px; overflow-x: auto; }
+.expert-category-toolbar { display: flex; min-height: 48px; height: auto; margin-top: 0; padding-top: 10px; align-items: flex-start; gap: 18px; overflow-x: auto; }
 .expert-category-toolbar nav { display: flex; flex: 0 0 auto; gap: 8px; }
-.expert-grid.cards .expert-tile em.product-tag { margin-left: 5px; }
-.expert-tile em.product-tag.chat { background: #eff6ff; color: #2563eb; }
-.expert-tile em.product-tag.task { background: #f2f2f2; color: #666; }
-.expert-tile em.category-tag { background: #fff6e8; color: #9a6b1f; }
+.expert-category-toolbar nav button { font-size: 14px; line-height: 20px; font-weight: 400; white-space: nowrap; }
+.expert-category-toolbar nav button:hover { background: #eeeeee; color: #202020; }
+.expert-category-toolbar nav button.active { background: #e8e8e8; color: #202020; font-weight: 600; }
+.expert-category-toolbar nav button:focus-visible { outline: 2px solid #666; outline-offset: 2px; }
+.expert-hub-body > .expert-grid { margin-top: 4px; }
+.expert-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.expert-grid .expert-tile .expert-tags em { margin: 0; padding: 2px 6px; font-size: 12px; line-height: 18px; white-space: nowrap; }
+.expert-grid .expert-tile .expert-tags .product-tag { display: inline-flex; align-items: center; gap: 5px; border: 1px solid; border-radius: 5px; font-weight: 500; }
+.expert-tags .product-tag::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.expert-tile em.product-tag.chat { background: #f5f3ff; color: #7052ba; border-color: #dfd6f4; }
+.expert-tile em.product-tag.task { background: #edf8f5; color: #247e6a; border-color: #c9e6dd; }
+.expert-tile em.category-tag { background: #f4f4f5; color: #71717a; }
+.expert-grid.list .expert-tile { min-height: 112px; }
+.expert-grid.list .expert-tile header > div { padding-right: 110px; }
+.expert-grid.list .expert-tile p { position: static; margin: 10px 110px 0 50px; }
 .expert-management-top + .expert-category-toolbar { justify-content: flex-start; }
 
 .library-top-row { min-height: 42px; align-items: center; padding-top: 0; }
@@ -359,6 +370,8 @@
 .library-scope button { height: 32px; padding: 0; border: 0; background: transparent; color: #666; font-size: 20px; }
 .library-scope button.on { color: #202020; font-weight: 600; }
 .library-toolbar { display: flex; min-height: 48px; align-items: flex-start; justify-content: space-between; padding-top: 10px; }
+.library-toolbar.library-top-row { min-height: 48px; align-items: flex-start; padding-top: 10px; gap: 18px; }
+.library-top-row .library-scope { flex-shrink: 0; }
 .library-categories { display: flex; gap: 22px; align-items: center; }
 .library-categories button { height: 30px; padding: 0 12px; border-radius: 6px; background: transparent; color: #666; font-size: 14px; }
 .library-categories button.on { background: #e8e8e8; color: #202020; font-weight: 600; }
