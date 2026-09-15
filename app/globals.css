@@ -328,6 +328,24 @@
 .expert-grid.cards .expert-tile strong { font-size: 16px; }
 .expert-grid.cards .expert-tile p { margin-top: 14px; color: #666; font-size: 13px; line-height: 21px; }
 .expert-grid.cards .expert-tile header > span { top: 22px; right: 22px; }
+.expert-management-top { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 18px; }
+.expert-management-top .expert-scope { height: 42px; align-items: center; gap: 24px; }
+.expert-product-filter { display: flex; align-items: center; gap: 4px; margin-left: 8px; padding-left: 18px; border-left: 1px solid #e8e8e8; }
+.expert-product-filter button { height: 30px; padding: 0 10px; border-radius: 7px; background: transparent; color: #777; font-size: 13px; }
+.expert-product-filter button.on, .expert-product-filter button:hover { background: #e8e8e8; color: #202020; }
+.expert-management-top .expert-view-tools { display: flex; align-items: center; gap: 8px; }
+.expert-management-top .expert-view-tools > button:not(.new-expert) { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 8px; background: transparent; font-size: 0; }
+.expert-management-top .expert-view-tools > button:not(.new-expert):hover, .expert-management-top .expert-view-tools > button.active { background: #e8e8e8; }
+.expert-management-top .expert-view-tools > button img { width: 18px; height: 18px; }
+.expert-management-top .expert-view-tools label { display: flex; width: 188px; height: 36px; align-items: center; gap: 7px; padding: 0 10px; border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; }
+.expert-management-top .expert-view-tools label img { width: 15px; height: 15px; opacity: .68; }
+.expert-management-top .expert-view-tools input { width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.expert-management-top .new-expert { height: 36px; border-radius: 8px; background: #202020; font-size: 12px; }
+.expert-category-toolbar { min-height: 36px; height: auto; margin-top: 8px; }
+.expert-category-toolbar nav { gap: 8px; }
+.expert-grid.cards .expert-tile em.product-tag { margin-left: 5px; }
+.expert-grid.cards .expert-tile em.product-tag.chat { background: #eff6ff; color: #2563eb; }
+.expert-grid.cards .expert-tile em.product-tag.task { background: #f2f2f2; color: #666; }
 
 .library-page { min-height: calc(100vh - 64px); padding: 24px 62px 32px; background: #f7f7f7; }
 .library-scope { display: flex; gap: 24px; height: 34px; align-items: flex-start; }
