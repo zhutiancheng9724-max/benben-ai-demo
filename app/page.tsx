@@ -26,16 +26,19 @@ const experts = [
   ["system-review.png", "评价管理专家"], ["system-conversation.png", "会话分析专家"],
 ] as const;
 
+type ExpertSection = "experts" | "skills" | "connectors";
+
 export default function Home() {
   const [designId, setDesignId] = useState("1404-1493");
   const [expertMode, setExpertMode] = useState(false);
-  const [expertSection, setExpertSection] = useState("experts");
+  const [expertSection, setExpertSection] = useState<ExpertSection>("experts");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setDesignId(params.get("design") || "1404-1493");
     setExpertMode(params.get("expert") === "1");
-    setExpertSection(params.get("section") === "skills" ? "skills" : "experts");
+    const section = params.get("section");
+    setExpertSection(section === "skills" ? "skills" : section === "connectors" ? "connectors" : "experts");
   }, []);
 
   if (expertMode) return <ExpertHub section={expertSection} onBack={() => { window.history.replaceState({}, "", "/?design=1404-1493"); setExpertMode(false); }} />;
@@ -77,7 +80,7 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
     <header className="topbar">
       <button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Task <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="task" />}
       <div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索历史对话" /></div>
-      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />犇犇专家</a><i />
+      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />专家·技能·连接器</a><i />
       <button className="settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button>
     </header>
     <section className="workspace">
@@ -146,7 +149,7 @@ function ChatHome({ menuOpen }: { menuOpen: boolean }) {
       <button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>
       {isMenuOpen && <ProductMenu current="chat" />}
       <div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input placeholder="搜索历史对话" /></div>
-      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />犇犇专家</a><i />
+      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />专家·技能·连接器</a><i />
       <button className="settings chat-settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button>
     </header>
     {!expert ? <ChatPicker onSelect={startConversation} /> : <section className={`chat-shell ${historyOpen ? "history-open" : ""}`}>
@@ -219,7 +222,7 @@ const expertCatalog = [
 type Expert = (typeof expertCatalog)[number];
 type RecruitmentConfig = { shops: string[]; departments: string[]; members: string[] };
 
-function ExpertHub({ onBack, section }: { onBack: () => void; section: string }) {
+function ExpertHub({ onBack, section }: { onBack: () => void; section: ExpertSection }) {
   const [view, setView] = useState<"cards" | "list">("cards");
   const [selected, setSelected] = useState<Expert | null>(null);
   const [customExperts, setCustomExperts] = useState<Expert[]>([]);
@@ -235,7 +238,8 @@ function ExpertHub({ onBack, section }: { onBack: () => void; section: string })
   const allExperts = [...expertCatalog, ...customExperts];
   const visibleExperts = allExperts.filter((expert) => (filter === "全部" || (filter === "自定义" && isCustom(expert)) || (filter === "系统专家" && !isCustom(expert))) && `${expert[1]}${expert[3]}`.includes(query.trim()));
   if (workspaceExpert) return <CustomExpertWorkspace expert={workspaceExpert} onBack={() => setWorkspaceExpert(null)} />;
-  return <main className="expert-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a className={section === "experts" ? "on" : ""} href="/?design=1404-1493&expert=1">专家</a><a className={section === "skills" ? "on" : ""} href="/?design=1404-1493&expert=1&section=skills">技能</a></header>{section === "skills" ? <SkillsCenter /> : <section className="expert-hub-body"><div className="expert-toolbar"><nav>{["全部", "系统专家", "自定义"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}</nav><div className="expert-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索专家" /></label><button className="new-expert" type="button" onClick={() => setCreateOpen(true)}>＋ 创建犇犇专家</button></div></div><div className={`expert-grid ${view}`}>{visibleExperts.map((expert) => { const custom = isCustom(expert); const recruited = isRecruited(expert); const openSystem = () => { setTab("我的简介"); setSelected(expert); }; return <article className={`expert-tile ${recruited ? "recruited" : "unrecruited"} ${custom ? "custom-expert" : "system-expert"}`} onClick={custom ? () => setWorkspaceExpert(expert) : openSystem} onKeyDown={(event) => { if (event.key === "Enter") custom ? setWorkspaceExpert(expert) : openSystem(); }} role="button" tabIndex={0} key={expert[0]}><header><img src={`${A}/${expert[2]}`} alt="" /><div><strong>{expert[1]}</strong><em>{custom ? "自定义" : "系统专家"}</em></div>{recruited ? <span>✓ 已招募</span> : <span className="recruit-label"><i>未招募</i><b>去招募　→</b></span>}</header><p>{expert[3]}</p>{custom && <span className="open-config">打开配置　→</span>}</article>; })}</div>{filter === "自定义" && !customExperts.length && <p className="custom-empty">还没有自定义专家，点击右上角创建一个吧。</p>}</section>}{createOpen && <CreateExpertModal onClose={() => setCreateOpen(false)} onContinue={(expert) => { setCustomExperts((all) => all.some(([id]) => id === expert[0]) ? all : [...all, expert]); setFilter("自定义"); setCreateOpen(false); setWorkspaceExpert(expert); }} />}{selected && <RecruitModal expert={selected} tab={tab} setTab={setTab} recruited={recruitedIds.includes(selected[0])} config={recruitConfigs[selected[0]]} onConfigChange={(config) => setRecruitConfigs((all) => ({ ...all, [selected[0]]: config }))} onClose={() => setSelected(null)} onRecruit={() => { setRecruitedIds((ids) => ids.includes(selected[0]) ? ids : [...ids, selected[0]]); setSelected(null); }} onCancelRecruit={() => { setRecruitedIds((ids) => ids.filter((id) => id !== selected[0])); setSelected(null); }} />}</main>;
+  if (section === "connectors") return <ConnectorCenter onBack={onBack} />;
+  return <main className="expert-hub"><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a className={section === "experts" ? "on" : ""} href="/?design=1404-1493&expert=1&section=experts">专家</a><a className={section === "skills" ? "on" : ""} href="/?design=1404-1493&expert=1&section=skills">技能</a><a className={section === "connectors" ? "on" : ""} href="/?design=1404-1493&expert=1&section=connectors">连接器</a><button className="management-settings" type="button" aria-label="设置"><img src={`${A}/settings-16.svg`} alt="" /></button></header>{section === "skills" ? <SkillsCenter /> : <section className="expert-hub-body"><div className="expert-toolbar"><nav>{["全部", "系统专家", "自定义"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}</nav><div className="expert-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索专家名称" /></label><button className="new-expert" type="button" onClick={() => setCreateOpen(true)}>＋ 创建犇犇专家</button></div></div><div className={`expert-grid ${view}`}>{visibleExperts.map((expert) => { const custom = isCustom(expert); const recruited = isRecruited(expert); const openSystem = () => { setTab("我的简介"); setSelected(expert); }; return <article className={`expert-tile ${recruited ? "recruited" : "unrecruited"} ${custom ? "custom-expert" : "system-expert"}`} onClick={custom ? () => setWorkspaceExpert(expert) : openSystem} onKeyDown={(event) => { if (event.key === "Enter") custom ? setWorkspaceExpert(expert) : openSystem(); }} role="button" tabIndex={0} key={expert[0]}><header><img src={`${A}/${expert[2]}`} alt="" /><div><strong>{expert[1]}</strong><em>{custom ? "自定义" : "系统专家"}</em></div>{recruited ? <span>✓ 已招募</span> : <span className="recruit-label"><i>未招募</i><b>去招募　→</b></span>}</header><p>{expert[3]}</p>{custom && <span className="open-config">打开配置　→</span>}</article>; })}</div>{filter === "自定义" && !customExperts.length && <p className="custom-empty">还没有自定义专家，点击右上角创建一个吧。</p>}</section>}{createOpen && <CreateExpertModal onClose={() => setCreateOpen(false)} onContinue={(expert) => { setCustomExperts((all) => all.some(([id]) => id === expert[0]) ? all : [...all, expert]); setFilter("自定义"); setCreateOpen(false); setWorkspaceExpert(expert); }} />}{selected && <RecruitModal expert={selected} tab={tab} setTab={setTab} recruited={recruitedIds.includes(selected[0])} config={recruitConfigs[selected[0]]} onConfigChange={(config) => setRecruitConfigs((all) => ({ ...all, [selected[0]]: config }))} onClose={() => setSelected(null)} onRecruit={() => { setRecruitedIds((ids) => ids.includes(selected[0]) ? ids : [...ids, selected[0]]); setSelected(null); }} onCancelRecruit={() => { setRecruitedIds((ids) => ids.filter((id) => id !== selected[0])); setSelected(null); }} />}</main>;
 }
 
 function CustomExpertWorkspace({ expert, onBack }: { expert: Expert; onBack: () => void }) {
@@ -275,15 +279,131 @@ function CreateExpertModal({ onClose, onContinue }: { onClose: () => void; onCon
   return <div className="modal-layer"><section className="create-expert-modal"><button className="close" type="button" onClick={onClose}>×</button><img src={`${A}/benben.png`} alt="犇犇" /><h1>Hi，把任务交给我吧</h1><label>专家名称<input value={name} onChange={(event) => setName(event.target.value)} placeholder="请输入专家名称" autoFocus /></label><label>工作内容<textarea value={work} onChange={(event) => setWork(event.target.value)} maxLength={200} placeholder="例如：识别高风险退款申请，降低资损，同时减少对正常消费者的误判。" /></label><small>{work.length} / 200</small><button className="create-continue" type="button" disabled={!name.trim()} onClick={() => onContinue([name.trim(), name.trim(), "benben.png", work.trim() || "根据业务目标自动分析任务、识别风险并输出处理建议。"])}>更多配置　→</button></section></div>;
 }
 
-const skills = [
-  ["更新工单状态", "本接口用于更新工作表中任务状态组件"], ["拒绝原因码查询", "退货退款拒绝时，需要先查询这个接口获取拒绝原因 code"], ["退货退款-人工已处理", "当客服或系统需要对售后工单做出处理决策时调用—用户申请退款。"], ["退货退款-同意退款", "当客服或系统需要对售后工单做出处理决策时调用—用户申请退款。"], ["辅助回填-会员基本信息", "辅助回填会员基本信息。"], ["退货退款-拒绝退款", "当客服或系统需要对售后工单做出处理决策时调用—用户申请退款。"], ["通用-订单备注", "本接口用于在电商平台上为特定订单添加或更新备注信息和状态策略。"], ["退货退款操作", "当客服或系统需要对售后工单做出处理决策时调用，常见场景包括人工处理。"],
-] as const;
+type Skill = { id: string; name: string; description: string; category: string; scope: "system" | "mine" };
+
+const skillCatalog: Skill[] = [
+  { id: "update-ticket", name: "更新工单状态", description: "本接口用于更新工作表中任务状态组件。", category: "工单", scope: "system" },
+  { id: "refund-reason", name: "拒绝原因码查询", description: "退货退款拒绝时，查询接口获取拒绝原因 code。", category: "售后", scope: "system" },
+  { id: "refund-manual", name: "退货退款-人工已处理", description: "当客服或系统需要对售后工单做出处理决策时调用。", category: "售后", scope: "system" },
+  { id: "refund-approve", name: "退货退款-同意退款", description: "根据审核规则确认退款条件，完成售后处理。", category: "售后", scope: "system" },
+  { id: "member-profile", name: "辅助回填-会员基本信息", description: "辅助回填会员基本信息，为任务判断提供上下文。", category: "通用", scope: "system" },
+  { id: "refund-reject", name: "退货退款-拒绝退款", description: "结合拒绝原因与凭证信息，输出售后处理结果。", category: "售后", scope: "system" },
+  { id: "order-note", name: "通用-订单备注", description: "为特定订单添加或更新备注信息和状态策略。", category: "订单", scope: "system" },
+  { id: "refund-operation", name: "退货退款操作", description: "在人工处理场景中完成售后工单操作与结果回填。", category: "售后", scope: "system" },
+  { id: "logistics-track", name: "物流轨迹查询", description: "查询包裹当前物流节点，识别履约异常与延误风险。", category: "物流", scope: "system" },
+  { id: "order-detail", name: "订单详情查询", description: "读取订单商品、支付和收货信息，形成统一订单上下文。", category: "订单", scope: "system" },
+];
 
 function SkillsCenter() {
-  const [view, setView] = useState<"list" | "cards">("list");
+  const [view, setView] = useState<"list" | "cards">("cards");
+  const [scope, setScope] = useState<"system" | "mine">("system");
+  const [filter, setFilter] = useState("全部");
+  const [queryDraft, setQueryDraft] = useState("");
   const [query, setQuery] = useState("");
-  const filtered = skills.filter(([name, description]) => `${name}${description}`.includes(query));
-  return <section className="skill-center"><div className="skill-toolbar"><h1>技能中心</h1><div className="skill-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="请输入技能名称" /></label><button className="query" type="button">查询</button><button className="reset" type="button" onClick={() => setQuery("")}>重置</button><button className="add-skill" type="button">＋ 添加关联技能</button></div></div><div className={`skill-grid ${view}`}>{[...filtered, ...filtered].slice(0, view === "list" ? filtered.length : 12).map(([name, description], index) => <article key={`${name}-${index}`}><div className="skill-mark">✦</div><div><strong>{name}</strong><p>{description}</p></div><button aria-label={`编辑 ${name}`} type="button"><img src={`${A}/edit.svg`} alt="" /></button></article>)}</div></section>;
+  const [mySkills, setMySkills] = useState<Skill[]>([]);
+  const [editorSkill, setEditorSkill] = useState<Skill | null | undefined>(undefined);
+  const [notice, setNotice] = useState("");
+  const categories = ["全部", "订单", "工单", "售后", "物流", "通用"];
+  const currentSkills = scope === "system" ? skillCatalog : mySkills;
+  const filtered = currentSkills.filter((skill) => (filter === "全部" || skill.category === filter) && `${skill.name}${skill.description}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 2400);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const reset = () => { setQueryDraft(""); setQuery(""); setFilter("全部"); };
+  const saveSkill = (skill: Skill) => {
+    setMySkills((items) => items.some((item) => item.id === skill.id) ? items.map((item) => item.id === skill.id ? skill : item) : [...items, skill]);
+    setEditorSkill(undefined);
+    setScope("mine");
+    setNotice("技能已保存到我的技能");
+  };
+
+  return <section className="library-page skill-center"><div className="library-scope"><button className={scope === "system" ? "on" : ""} type="button" onClick={() => setScope("system")}>系统技能</button><button className={scope === "mine" ? "on" : ""} type="button" onClick={() => setScope("mine")}>我的技能</button></div><div className="library-toolbar"><nav className="library-categories">{categories.map((item) => <button className={filter === item ? "on" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</nav><div className="library-actions"><div className="view-toggle"><button aria-label="列表视图" className={view === "list" ? "on" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "on" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button></div><label className="library-search"><img src={`${A}/search-expert.svg`} alt="" /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(queryDraft); }} placeholder="搜索技能名称" /></label><button className="library-query" type="button" onClick={() => setQuery(queryDraft)}>查询</button><button className="library-reset" type="button" onClick={reset}>重置</button><button className="library-add" type="button" onClick={() => setEditorSkill(null)}>＋ 添加关联技能</button></div></div>{filtered.length ? <div className={`library-grid ${view}`}>{filtered.map((skill) => <article className="skill-card" key={skill.id} onClick={() => scope === "mine" ? setEditorSkill(skill) : setNotice("系统技能为平台能力，暂不支持直接修改")}><header><img src="/figma-connectors/skill-icon.svg" alt="" /><div><strong>{skill.name}</strong><span>{skill.category}</span></div><b>✓ 已启用</b></header><p>{skill.description}</p>{scope === "mine" && <button className="skill-edit" aria-label={`编辑 ${skill.name}`} type="button" onClick={(event) => { event.stopPropagation(); setEditorSkill(skill); }}><img src={`${A}/edit.svg`} alt="" /></button>}</article>)}</div> : <div className="library-empty"><img src="/figma-connectors/skill-icon.svg" alt="" /><strong>{scope === "mine" ? "还没有关联技能" : "没有匹配的系统技能"}</strong><p>{scope === "mine" ? "点击右上角添加关联技能，开始配置你的专家能力。" : "试试切换分类或调整搜索关键词。"}</p></div>}{editorSkill !== undefined && <SkillEditorModal skill={editorSkill} onClose={() => setEditorSkill(undefined)} onSave={saveSkill} />}{notice && <div className="library-toast">{notice}</div>}</section>;
+}
+
+function SkillEditorModal({ skill, onClose, onSave }: { skill: Skill | null; onClose: () => void; onSave: (skill: Skill) => void }) {
+  const [name, setName] = useState(skill?.name ?? "");
+  const [description, setDescription] = useState(skill?.description ?? "");
+  const [category, setCategory] = useState(skill?.category ?? "通用");
+  return <div className="modal-layer library-modal-layer"><section className="library-editor-modal"><button className="close" type="button" onClick={onClose}>×</button><header><img src="/figma-connectors/skill-icon.svg" alt="" /><div><h2>{skill ? "编辑关联技能" : "添加关联技能"}</h2><p>配置技能名称与说明，保存后可在我的技能中使用。</p></div></header><label>技能名称<input value={name} onChange={(event) => setName(event.target.value)} placeholder="请输入技能名称" autoFocus /></label><label>技能分类<select value={category} onChange={(event) => setCategory(event.target.value)}>{["订单", "工单", "售后", "物流", "通用"].map((item) => <option key={item}>{item}</option>)}</select></label><label>技能说明<textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={160} placeholder="请输入技能的使用说明" /></label><footer><button type="button" className="modal-secondary" onClick={onClose}>取消</button><button type="button" className="modal-primary" disabled={!name.trim()} onClick={() => onSave({ id: skill?.id ?? `custom-skill-${Date.now()}`, name: name.trim(), description: description.trim() || "暂无技能说明。", category, scope: "mine" })}>保存</button></footer></section></div>;
+}
+
+type Connector = { id: string; name: string; description: string; type: "ERP" | "应用"; logo: string; authorized: boolean };
+
+const connectorCatalog: Connector[] = [
+  { id: "bojun", name: "伯俊【云雀版】", description: "伯俊云雀 OMS，统一管理商品、进销存、订单与多平台库存同步。", type: "ERP", logo: "/figma-connectors/logo-bojun.svg", authorized: true },
+  { id: "wangdian", name: "网店管家", description: "电商 ERP 一体化解决方案，覆盖订单、仓储、采购、财务与 CRM。", type: "ERP", logo: "/figma-connectors/logo-wangdian.png", authorized: true },
+  { id: "guanyi", name: "管易云-数智版-Test", description: "管易云数智版测试环境，支持订单、库存与财务数据同步。", type: "ERP", logo: "/figma-connectors/logo-guanyi.svg", authorized: true },
+  { id: "tongtianxiao", name: "通天晓", description: "WMS 供应链系统，覆盖订单履约与运输管理。", type: "ERP", logo: "/figma-connectors/logo-tongtianxiao.svg", authorized: true },
+  { id: "kuaimai", name: "快麦ERP", description: "快麦 ERP，支持订单、库存和售后业务协同。", type: "ERP", logo: "/figma-connectors/logo-kuaimai.svg", authorized: true },
+  { id: "jushuitan", name: "聚水潭", description: "聚水潭 ERP，覆盖多平台订单、仓储和库存管理。", type: "ERP", logo: "/figma-connectors/logo-jushuitan.svg", authorized: true },
+  { id: "juyi", name: "巨益", description: "巨益 ERP 与开放接口，支持订单和售后流程接入。", type: "ERP", logo: "/figma-connectors/logo-guanyi.svg", authorized: true },
+  { id: "dingtalk", name: "钉钉", description: "连接钉钉消息、通讯录与协作数据，授权后可在专家任务中调用。", type: "应用", logo: "/figma-connectors/logo-dingtalk.png", authorized: false },
+  { id: "feishu", name: "飞书", description: "连接飞书消息、文档与协作数据，授权后可在专家任务中调用。", type: "应用", logo: "/figma-connectors/logo-feishu.svg", authorized: false },
+];
+
+function ConnectorCenter({ onBack }: { onBack: () => void }) {
+  const [scope, setScope] = useState<"system" | "mine">("system");
+  const [view, setView] = useState<"cards" | "list">("cards");
+  const [filter, setFilter] = useState("全部");
+  const [queryDraft, setQueryDraft] = useState("");
+  const [query, setQuery] = useState("");
+  const [connectorStates, setConnectorStates] = useState<Record<string, boolean>>(() => Object.fromEntries(connectorCatalog.map((connector) => [connector.id, connector.authorized])));
+  const [accountCounts, setAccountCounts] = useState<Record<string, number>>(() => Object.fromEntries(connectorCatalog.map((connector) => [connector.id, connector.authorized ? 1 : 0])));
+  const [authTarget, setAuthTarget] = useState<Connector | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Connector | null>(null);
+  const [menu, setMenu] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const categories = ["全部", "ERP", "应用"];
+  const filtered = connectorCatalog.filter((connector) => (scope === "system" || connectorStates[connector.id]) && (filter === "全部" || connector.type === filter) && `${connector.name}${connector.description}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 2400);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const reset = () => { setQueryDraft(""); setQuery(""); setFilter("全部"); };
+  const getConnector = (id: string) => connectorCatalog.find((connector) => connector.id === id) ?? connectorCatalog[0];
+  const saveAuthorization = (id: string, accounts: number) => {
+    setConnectorStates((states) => ({ ...states, [id]: true }));
+    setAccountCounts((counts) => ({ ...counts, [id]: Math.max(1, accounts) }));
+    setAuthTarget(null);
+    setMenu(null);
+    setNotice("连接器授权配置已保存");
+  };
+  const cancelAuthorization = () => {
+    if (!cancelTarget) return;
+    setConnectorStates((states) => ({ ...states, [cancelTarget.id]: false }));
+    setAccountCounts((counts) => ({ ...counts, [cancelTarget.id]: 0 }));
+    setCancelTarget(null);
+    setMenu(null);
+    setNotice(`已取消与${cancelTarget.name}的连接`);
+  };
+  const openConnector = (connector: Connector) => { setMenu(null); setAuthTarget(connector); };
+
+  return <main className="expert-hub connector-hub"><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a href="/?design=1404-1493&expert=1&section=experts">专家</a><a href="/?design=1404-1493&expert=1&section=skills">技能</a><a className="on" href="/?design=1404-1493&expert=1&section=connectors">连接器</a><button className="management-settings" type="button" aria-label="设置"><img src={`${A}/settings-16.svg`} alt="" /></button></header><section className="library-page connector-center"><div className="library-scope"><button className={scope === "system" ? "on" : ""} type="button" onClick={() => setScope("system")}>系统连接</button><button className={scope === "mine" ? "on" : ""} type="button" onClick={() => setScope("mine")}>我的连接</button></div><div className="library-toolbar"><nav className="library-categories">{categories.map((item) => <button className={filter === item ? "on" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</nav><div className="library-actions"><div className="view-toggle"><button aria-label="列表视图" className={view === "list" ? "on" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "on" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button></div><label className="library-search"><img src={`${A}/search-expert.svg`} alt="" /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(queryDraft); }} placeholder="搜索连接器名称" /></label><button className="library-query" type="button" onClick={() => setQuery(queryDraft)}>查询</button><button className="library-reset" type="button" onClick={reset}>重置</button></div></div>{filtered.length ? <div className={`connector-grid ${view}`}>{filtered.map((connector) => <article className="connector-card" key={connector.id} onClick={() => openConnector(connector)}><header><div className="connector-logo"><img src={connector.logo} alt="" /></div><div className="connector-name"><strong>{connector.name}</strong><span>{connector.type}</span></div><div className="connector-menu-wrap"><button className="connector-more" type="button" aria-label={`${connector.name}更多操作`} onClick={(event) => { event.stopPropagation(); setMenu(menu === connector.id ? null : connector.id); }}>···</button>{menu === connector.id && <div className="connector-menu"><button type="button" onClick={(event) => { event.stopPropagation(); openConnector(connector); }}>配置授权</button>{connectorStates[connector.id] && <button className="danger" type="button" onClick={(event) => { event.stopPropagation(); setMenu(null); setCancelTarget(connector); }}>取消连接</button>}</div>}</div></header><p>{connector.description}</p><footer><small>{accountCounts[connector.id] > 1 ? `${accountCounts[connector.id]} 个账号已授权` : connectorStates[connector.id] ? "已授权" : "尚未连接"}</small><button className={connectorStates[connector.id] ? "authorized" : "connect"} type="button" onClick={(event) => { event.stopPropagation(); openConnector(connector); }}>{connectorStates[connector.id] ? "✓ 已授权" : "授权连接"}</button></footer></article>)}</div> : <div className="library-empty"><strong>{scope === "mine" ? "还没有我的连接" : "没有匹配的系统连接"}</strong><p>{scope === "mine" ? "授权一个系统连接器后，它会出现在这里。" : "试试切换分类或调整搜索关键词。"}</p></div>}{authTarget && <ConnectorAuthModal connector={authTarget} accountCount={accountCounts[authTarget.id] || 1} onClose={() => setAuthTarget(null)} onSave={(accounts) => saveAuthorization(authTarget.id, accounts)} />}{cancelTarget && <ConnectorCancelModal connector={cancelTarget} onClose={() => setCancelTarget(null)} onConfirm={cancelAuthorization} />}{notice && <div className="library-toast">{notice}</div>}</section></main>;
+}
+
+type AuthAccount = { name: string; customerId: string; aesKey: string; appSecret: string; iv: string };
+
+function ConnectorAuthModal({ connector, accountCount, onClose, onSave }: { connector: Connector; accountCount: number; onClose: () => void; onSave: (accountCount: number) => void }) {
+  const [mode, setMode] = useState<"single" | "multi">(accountCount > 1 ? "multi" : "single");
+  const emptyAccount = (): AuthAccount => ({ name: "", customerId: "", aesKey: "", appSecret: "", iv: "" });
+  const [accounts, setAccounts] = useState<AuthAccount[]>(() => Array.from({ length: Math.max(1, accountCount) }, (_, index) => ({ ...emptyAccount(), name: index === 0 ? `${connector.name}主账号` : "" })));
+  const [activeIndex, setActiveIndex] = useState(0);
+  const active = accounts[activeIndex] ?? accounts[0];
+  const updateAccount = (field: keyof AuthAccount, value: string) => setAccounts((items) => items.map((item, index) => index === activeIndex ? { ...item, [field]: value } : item));
+  const addAccount = () => { setAccounts((items) => [...items, emptyAccount()]); setActiveIndex(accounts.length); setMode("multi"); };
+  const renderFields = (account: AuthAccount) => <div className="auth-fields"><label>连接名称<input value={account.name} onChange={(event) => updateAccount("name", event.target.value)} placeholder="请输入连接名称" /></label><label>customerId<input value={account.customerId} onChange={(event) => updateAccount("customerId", event.target.value)} placeholder="请输入 customerId" /></label><label>aesKey<input value={account.aesKey} onChange={(event) => updateAccount("aesKey", event.target.value)} placeholder="请输入 aesKey" /></label><label>appSecret<input type="password" value={account.appSecret} onChange={(event) => updateAccount("appSecret", event.target.value)} placeholder="请输入 appSecret" /></label><label>iv<input value={account.iv} onChange={(event) => updateAccount("iv", event.target.value)} placeholder="请输入 iv" /></label></div>;
+  return <div className="modal-layer connector-modal-layer"><section className="connector-auth-modal"><button className="close" type="button" onClick={onClose}>×</button><header className="auth-title"><div className="connector-logo large"><img src={connector.logo} alt="" /></div><div><h2>授权配置 · {connector.name}</h2><p>接口权限已开通 · 支持套餐、物流轨迹、订单和实时库存</p></div></header><nav className="auth-tabs"><button className={mode === "single" ? "on" : ""} type="button" onClick={() => setMode("single")}>单账号</button><button className={mode === "multi" ? "on" : ""} type="button" onClick={() => setMode("multi")}>多账号</button></nav>{mode === "single" ? renderFields(active) : <div className="multi-auth"><header><strong>已配置账号（{accounts.length}）</strong><button type="button" onClick={addAccount}>＋ 添加账号</button></header><div className="account-list">{accounts.map((account, index) => <div className={`account-item ${activeIndex === index ? "open" : ""}`} key={`account-${index}`}><button className="account-heading" type="button" onClick={() => setActiveIndex(index)}><span>{account.name || `账号 ${index + 1}`}</span><i>{activeIndex === index ? "⌃" : "⌄"}</i></button>{activeIndex === index && renderFields(account)}</div>)}</div></div>}<footer className="auth-footer"><button className="modal-secondary" type="button" onClick={onClose}>取消</button><button className="modal-primary" type="button" onClick={() => onSave(mode === "multi" ? accounts.length : 1)}>保存</button></footer></section></div>;
+}
+
+function ConnectorCancelModal({ connector, onClose, onConfirm }: { connector: Connector; onClose: () => void; onConfirm: () => void }) {
+  return <div className="modal-layer cancel-modal-layer"><section className="cancel-connector-modal"><button className="close" type="button" onClick={onClose}>×</button><div className="cancel-icon">!</div><h2>取消与{connector.name}的连接?</h2><p>取消后，相关专家将无法继续调用该连接器的数据与能力，你可以随时重新授权。</p><footer><button className="modal-secondary" type="button" onClick={onClose}>保留连接</button><button className="modal-danger" type="button" onClick={onConfirm}>取消连接</button></footer></section></div>;
 }
 
 function RailButtons() { return <><nav>{nav.slice(0, 6).map(([icon, label], index) => <button className={index === 1 ? "selected" : ""} type="button" key={label}><img src={`${A}/${icon}`} alt="" /><span>{label}</span></button>)}</nav><nav className="rail-bottom-nav">{nav.slice(6).map(([icon, label]) => <button type="button" key={label}><img src={`${A}/${icon}`} alt="" /><span>{label}</span></button>)}</nav></>; }
