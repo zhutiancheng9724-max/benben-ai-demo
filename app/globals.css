@@ -344,8 +344,15 @@
 .expert-category-toolbar { display: flex; min-height: 36px; height: auto; margin-top: 8px; gap: 18px; overflow-x: auto; }
 .expert-category-toolbar nav { display: flex; flex: 0 0 auto; gap: 24px; }
 .expert-grid.cards .expert-tile em.product-tag { margin-left: 5px; }
-.expert-grid.cards .expert-tile em.product-tag.chat { background: #eff6ff; color: #2563eb; }
-.expert-grid.cards .expert-tile em.product-tag.task { background: #f2f2f2; color: #666; }
+.expert-tile em.product-tag.chat { background: #eff6ff; color: #2563eb; }
+.expert-tile em.product-tag.task { background: #f2f2f2; color: #666; }
+.expert-tile em.category-tag { background: #fff6e8; color: #9a6b1f; }
+.expert-management-top + .expert-category-toolbar { justify-content: flex-start; }
+
+.library-top-row { min-height: 42px; align-items: center; padding-top: 0; }
+.library-top-row .library-scope { height: 34px; align-items: center; }
+.library-filter-row { min-height: 48px; align-items: flex-start; padding-top: 10px; }
+.library-filter-row .library-categories { flex: 0 0 auto; }
 
 .library-page { min-height: calc(100vh - 64px); padding: 24px 62px 32px; background: #f7f7f7; }
 .library-scope { display: flex; gap: 24px; height: 34px; align-items: flex-start; }
