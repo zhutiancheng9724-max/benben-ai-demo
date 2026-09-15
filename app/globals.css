@@ -348,10 +348,12 @@
 .expert-category-toolbar nav button.active { background: #e8e8e8; color: #202020; font-weight: 600; }
 .expert-category-toolbar nav button:focus-visible { outline: 2px solid #666; outline-offset: 2px; }
 .expert-hub-body > .expert-grid { margin-top: 4px; }
-.expert-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.expert-title-row { display: flex; min-width: 0; align-items: center; gap: 7px; }
+.expert-title-row strong { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expert-title-row .product-tag { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 5px; margin: 0; padding: 2px 6px; border: 1px solid; border-radius: 5px; font-size: 12px; font-weight: 500; line-height: 18px; white-space: nowrap; }
+.expert-title-row .product-tag::before { width: 5px; height: 5px; border-radius: 50%; background: currentColor; content: ""; }
+.expert-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
 .expert-grid .expert-tile .expert-tags em { margin: 0; padding: 2px 6px; font-size: 12px; line-height: 18px; white-space: nowrap; }
-.expert-grid .expert-tile .expert-tags .product-tag { display: inline-flex; align-items: center; gap: 5px; border: 1px solid; border-radius: 5px; font-weight: 500; }
-.expert-tags .product-tag::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .expert-tile em.product-tag.chat { background: #f5f3ff; color: #7052ba; border-color: #dfd6f4; }
 .expert-tile em.product-tag.task { background: #edf8f5; color: #247e6a; border-color: #c9e6dd; }
 .expert-tile em.category-tag { background: #f4f4f5; color: #71717a; }
