@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const A = "/figma-task";
 
@@ -10,14 +10,19 @@ const nav = [
   ["apps.svg", "应用"], ["search.svg", "搜索"], ["notifications.svg", "通知"],
 ] as const;
 
-const taskData = [
-  { title: "用户申请退款理赔，需核查诊断", time: "02/11 10:54", order: "6921739428437523559", risk: "high", tag: "", detail: "用户申请退款理赔，需核查诊断" },
-  { title: "工单状态更新失败，需人工介入处理", time: "02/11 10:54", order: "6921739428437523559", risk: "medium", tag: "", detail: "工单状态更新失败，需人工介入处理" },
-  { title: "用户投诉商品数量缺少，需核查发货记录", time: "02/11 10:54", order: "6921739428437523551", risk: "", tag: "", detail: "用户投诉商品数量缺少，需核查发货记录" },
-  { title: "未按约定时间发货，赔付自动判定", time: "02/11 10:54", order: "6921739428437523552", risk: "", tag: "", detail: "未按约定时间发货，赔付自动判定" },
-  { title: "订单咨询及售后流转记录", time: "02/11 10:54", order: "6921739428437523553", risk: "", tag: "", detail: "订单咨询及售后流转记录" },
-  { title: "识别到羊毛党风险判定，需人工介入", time: "02/11 10:54", order: "6921739428437523554", risk: "high", tag: "", detail: "识别到羊毛党风险判定，需人工介入" },
-  { title: "用户申请退款理赔，需核查诊断", time: "02/11 10:54", order: "6921739428437523555", risk: "", tag: "", detail: "用户申请退款理赔，需核查诊断" },
+type TaskRisk = "high" | "medium" | "low" | "other";
+type TaskMode = "人工" | "犇犇";
+
+const taskData: Array<{
+  title: string; time: string; order: string; risk: TaskRisk; mode: TaskMode; detail: string; summary: string; store: string;
+  expert: string; status: string; pending: boolean; criterion: string; confidence: string; evidence: string[]; conclusion: string;
+}> = [
+  { title: "包裹破损图片识别", time: "08/21", order: "6955163168553571440", risk: "high", mode: "人工", detail: "包裹破损图片识别", summary: "图片识别完成，待人工确认退款需求", store: "班牛数码专营店", expert: "图片识别专家", status: "待确认", pending: true, criterion: "识别包裹图片，判断是否符合破损退款需求", confidence: "92%", evidence: ["外包装存在明显挤压变形和破损，箱角处有撕裂痕迹。", "纸箱结构受损，可能导致内部商品受损。", "符合“外包装破损/二次封包”等破损类售后退款场景。"], conclusion: "符合破损退款需求" },
+  { title: "买家反馈少件，核对出库称重", time: "14:18", order: "6921739428437523559", risk: "medium", mode: "人工", detail: "买家反馈少件，核对出库称重", summary: "包裹重量存在差异，需核对打包记录", store: "班牛数码专营店", expert: "出库核验专家", status: "待处理", pending: true, criterion: "核对商品出库称重记录，确认是否存在少件", confidence: "86%", evidence: ["订单出库重量与商品标准重量存在偏差。", "打包视频记录待补充核验。", "建议优先核对仓内称重与面单信息。"], conclusion: "需要进一步核对出库记录" },
+  { title: "物流滞留超过 48 小时，发起催派", time: "13:56", order: "4491028394810293847", risk: "low", mode: "犇犇", detail: "物流滞留催派", summary: "已联系承运商，等待最新物流反馈", store: "班牛官方旗舰店", expert: "物流履约专家", status: "处理中", pending: true, criterion: "识别物流滞留节点并向承运商发起催派", confidence: "98%", evidence: ["包裹已在中转站停留超过 48 小时。", "承运商接口已返回催派受理结果。", "系统将持续跟踪下一条物流节点。"], conclusion: "已发起催派，等待物流更新" },
+  { title: "发送商品售后说明书", time: "13:42", order: "7351169018351009822", risk: "other", mode: "犇犇", detail: "商品售后说明书发送", summary: "已匹配说明书，等待确认发送", store: "班牛官方旗舰店", expert: "售后服务专家", status: "待确认", pending: true, criterion: "匹配对应商品的售后说明书并推送给买家", confidence: "100%", evidence: ["已根据商品编码匹配售后说明书。", "买家会话渠道可正常发送附件。", "等待客服确认后自动发送。"], conclusion: "说明书已准备完成" },
+  { title: "退款争议处理，核验退货凭证", time: "13:26", order: "8829103948192039182", risk: "high", mode: "人工", detail: "退款争议处理", summary: "退货信息与原订单不符，待复核", store: "天马数码专营店", expert: "退款审核专家", status: "待处理", pending: true, criterion: "核验退货凭证与原订单信息的一致性", confidence: "78%", evidence: ["退货单号与原订单关联信息不完整。", "商品照片需人工复核。", "建议联系买家补充凭证。"], conclusion: "存在争议，需人工复核" },
+  { title: "退货退款凭证工单创建", time: "12:48", order: "3315273205661033387", risk: "high", mode: "人工", detail: "凭证工单创建", summary: "已生成物流凭证，可查看并下载", store: "班牛数码专营店", expert: "凭证创建专家", status: "已完成", pending: false, criterion: "生成订单物流凭证并创建关联工单", confidence: "100%", evidence: ["物流节点与订单信息已同步。", "凭证文件已脱敏处理。", "关联工单创建成功。"], conclusion: "成功创建凭证工单" },
 ];
 
 const experts = [
@@ -32,67 +37,210 @@ export default function Home() {
   const [designId, setDesignId] = useState("1404-1493");
   const [expertMode, setExpertMode] = useState(false);
   const [expertSection, setExpertSection] = useState<ExpertSection>("experts");
+  const [chatSettings, setChatSettings] = useState(false);
+  const [settingsMode, setSettingsMode] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setDesignId(params.get("design") || "1404-1493");
     setExpertMode(params.get("expert") === "1");
+    setChatSettings(params.get("chatView") === "settings");
+    setSettingsMode(params.get("settings") === "1");
     const section = params.get("section");
     setExpertSection(section === "skills" ? "skills" : section === "connectors" ? "connectors" : "experts");
   }, []);
 
-  if (expertMode) return <ExpertHub section={expertSection} onBack={() => { window.history.replaceState({}, "", "/?design=1404-1493"); setExpertMode(false); }} />;
+  const expertParams = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
+  const previousExpertSource = typeof window === "undefined" ? null : window.sessionStorage.getItem("benben-expert-source");
+  const expertSource = expertParams.get("from") === "chat" || (expertParams.get("from") !== "task" && previousExpertSource === "chat") ? "chat" : "task";
+  if (expertMode) return <ExpertHub section={expertSection} onBack={() => {
+    const fallback = expertSource === "chat" ? "/?design=1404-1392" : "/?design=1404-1493";
+    const saved = window.sessionStorage.getItem(`benben-expert-return-${expertSource}`);
+    window.location.assign(saved?.startsWith("/") ? saved : fallback);
+  }} />;
+  if (settingsMode) {
+    const source = expertParams.get("from") === "chat" ? "chat" : "task";
+    return <SettingsCenter onBack={() => window.location.assign(source === "chat" ? "/?design=1404-1392" : "/?design=1404-1493")} />;
+  }
   const chat = ["1404-1392", "1414-832", "1414-1072", "1423-474"].includes(designId);
   const menu = ["1404-1881", "1414-28", "1414-430", "1414-832", "1414-952", "1414-1072"].includes(designId);
-  if (chat) return <ChatHome menuOpen={menu} />;
+  if (chat) return <ChatHome menuOpen={menu} initialSettings={chatSettings} />;
   return <TaskHome menuOpen={menu} />;
 }
 
 function TaskHome({ menuOpen }: { menuOpen: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(menuOpen);
-  const [activeTask, setActiveTask] = useState(1);
-  const [readTasks, setReadTasks] = useState<number[]>([2, 3, 4]);
-  const [taskTab, setTaskTab] = useState("组内任务");
+  const [activeTask, setActiveTask] = useState(0);
   const [detailTab, setDetailTab] = useState("概览");
-  const [risk, setRisk] = useState("全部");
+  const [taskScope, setTaskScope] = useState<"pending" | "all">("pending");
+  const [risk, setRisk] = useState<"all" | TaskRisk>("all");
   const [search, setSearch] = useState("");
-  const shownTasks = useMemo(() => taskData.filter((task) => task.title.includes(search) && (risk === "全部" || task.risk === risk)), [risk, search]);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const defaultAdvanced = { mode: "全部", store: "全部店铺", status: "全部状态" } as const;
+  const [advanced, setAdvanced] = useState<{ mode: "全部" | TaskMode; store: string; status: string }>(defaultAdvanced);
+  const [draftAdvanced, setDraftAdvanced] = useState(advanced);
+  const advancedRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const shownTasks = useMemo(() => taskData.filter((task) => {
+    const searchMatch = !search.trim() || [task.title, task.order, task.store, task.expert].some((value) => value.includes(search.trim()));
+    const scopeMatch = taskScope === "all" || task.pending;
+    const riskMatch = risk === "all" || task.risk === risk;
+    const modeMatch = advanced.mode === "全部" || task.mode === advanced.mode;
+    const storeMatch = advanced.store === "全部店铺" || task.store === advanced.store;
+    const statusMatch = advanced.status === "全部状态" || task.status === advanced.status;
+    return searchMatch && scopeMatch && riskMatch && modeMatch && storeMatch && statusMatch;
+  }), [advanced, risk, search, taskScope]);
   const selected = taskData[activeTask];
+  const riskCounts: Record<TaskRisk, number> = { high: 12, medium: 24, low: 56, other: 36 };
+
+  const openAdvanced = () => {
+    setManualOpen(false);
+    setDraftAdvanced(advanced);
+    setAdvancedOpen((open) => !open);
+  };
+  const resetAdvanced = () => setDraftAdvanced(defaultAdvanced);
+  const applyAdvanced = () => { setAdvanced(draftAdvanced); setAdvancedOpen(false); };
+  const hasAdvancedFilter = advanced.mode !== "全部" || advanced.store !== "全部店铺" || advanced.status !== "全部状态";
+  const announce = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(""), 2200); };
 
   useEffect(() => {
-    if (!isMenuOpen) return;
-    const closeMenu = (event: MouseEvent) => {
+    const closeFloatingPanels = (event: MouseEvent) => {
       const target = event.target;
-      if (target instanceof Element && !target.closest(".product, .product-menu")) setIsMenuOpen(false);
+      if (!(target instanceof Element)) return;
+      if (isMenuOpen && !target.closest(".task-v2-product-wrap")) setIsMenuOpen(false);
+      if (advancedOpen && !target.closest(".task-v2-search-wrap")) setAdvancedOpen(false);
+      if (manualOpen && !target.closest(".task-v2-trigger-wrap")) setManualOpen(false);
     };
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setIsMenuOpen(false); };
-    document.addEventListener("mousedown", closeMenu);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsMenuOpen(false); setAdvancedOpen(false); setManualOpen(false);
+    };
+    document.addEventListener("mousedown", closeFloatingPanels);
     document.addEventListener("keydown", closeOnEscape);
-    return () => { document.removeEventListener("mousedown", closeMenu); document.removeEventListener("keydown", closeOnEscape); };
-  }, [isMenuOpen]);
+    return () => { document.removeEventListener("mousedown", closeFloatingPanels); document.removeEventListener("keydown", closeOnEscape); };
+  }, [advancedOpen, isMenuOpen, manualOpen]);
 
-  return <main className="task-app">
+  useEffect(() => {
+    if (shownTasks.some((task) => task === selected)) return;
+    const firstVisible = shownTasks[0];
+    if (firstVisible) setActiveTask(taskData.indexOf(firstVisible));
+  }, [selected, shownTasks]);
+
+  return <main className="task-app task-home-v2">
     <aside className="side-rail">
       <img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" />
       <RailButtons />
       <img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" />
     </aside>
-    <header className="topbar">
-      <button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Task <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="task" />}
-      <div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索历史对话" /></div>
-      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />专家·技能·连接器</a><i />
-      <button className="settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button>
+    <header className="task-v2-topbar">
+      <div className="task-v2-product-wrap"><button className={`task-v2-product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Task <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="task" />}</div>
+      <div ref={searchRef} className="task-v2-search-wrap">
+        <label className="task-v2-search"><img src={`${A}/search-top.svg`} alt="" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索任务、订单号或买家 ID" /></label>
+        <button type="button" className={`task-v2-advanced-button ${hasAdvancedFilter ? "filtered" : ""}`} onClick={openAdvanced}><span aria-hidden="true">⌘</span>高级筛选{hasAdvancedFilter && <i />}</button>
+        {advancedOpen && <div ref={advancedRef} className="task-v2-advanced-popover" role="dialog" aria-label="高级筛选">
+          <header><strong>高级筛选</strong><button type="button" onClick={() => setAdvancedOpen(false)} aria-label="关闭">×</button></header>
+          <label>处理方式<select value={draftAdvanced.mode} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, mode: event.target.value as "全部" | TaskMode })}><option>全部</option><option>人工</option><option>犇犇</option></select></label>
+          <label>关联店铺<select value={draftAdvanced.store} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, store: event.target.value })}><option>全部店铺</option><option>班牛数码专营店</option><option>班牛官方旗舰店</option><option>天马数码专营店</option></select></label>
+          <label>任务状态<select value={draftAdvanced.status} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, status: event.target.value })}><option>全部状态</option><option>待确认</option><option>待处理</option><option>处理中</option><option>已完成</option></select></label>
+          <footer><button type="button" onClick={resetAdvanced}>重置</button><button type="button" onClick={applyAdvanced}>应用筛选</button></footer>
+        </div>}
+      </div>
+      <div className="task-v2-trigger-wrap"><button type="button" className="task-v2-manual-trigger" onClick={() => { setAdvancedOpen(false); setManualOpen((open) => !open); }}>手动触发</button>{manualOpen && <div className="task-v2-trigger-popover"><strong>手动触发任务</strong><p>选择专家后可立即创建一条待处理任务。</p><button type="button" onClick={() => { setManualOpen(false); announce("已创建一条待处理任务"); }}>创建任务</button></div>}</div>
+      <a className="task-v2-management" href="/?design=1404-1493&expert=1&from=task" onClick={() => { window.sessionStorage.setItem("benben-expert-return-task", `${window.location.pathname}${window.location.search}`); window.sessionStorage.setItem("benben-expert-source", "task"); }}><span>✧</span>专家·技能·连接器</a>
+      <button className="task-v2-settings" type="button" onClick={() => { window.sessionStorage.setItem("benben-settings-return-task", `${window.location.pathname}${window.location.search}`); window.location.assign("/?design=1404-1493&settings=1&from=task"); }}><img src={`${A}/settings-16.svg`} alt="" />设置</button>
     </header>
-    <section className="workspace">
-      <FilterPanel risk={risk} onRisk={setRisk} />
-      <section className="task-list">
-        <div className="list-toolbar"><div className="list-switch"><button type="button" onClick={() => setTaskTab("待我处理")} className={taskTab === "待我处理" ? "on" : ""}>待我处理 <b>0</b></button><button type="button" onClick={() => setTaskTab("组内任务")} className={taskTab === "组内任务" ? "on" : ""}>组内任务 <b>147</b></button></div><button className="refresh" type="button"><img src={`${A}/refresh-list.svg`} alt="刷新" /></button></div>
-        <div className="tasks">{shownTasks.map((task, listIndex) => { const index = taskData.indexOf(task); const isRead = readTasks.includes(index); return <button type="button" onClick={() => { setActiveTask(index); setReadTasks((items) => items.includes(index) ? items : [...items, index]); }} className={`task-row ${activeTask === index ? "active" : ""} ${isRead ? "read" : "unread"}`} key={`${task.order}-${listIndex}`}>
-          <span className="task-time">{task.time}</span><p className="task-title">{task.risk && <img src={`${A}/${task.risk === "high" ? "task-risk-high.svg" : task.risk === "medium" ? "task-risk-medium.svg" : `risk-${task.risk}.svg`}`} alt="" />}{task.title}</p><small>订单号：{task.order} <img src={`${A}/copy.svg`} alt="复制" /></small></button>; })}</div>
-      </section>
-      <DetailPanel detailTab={detailTab} onTab={setDetailTab} selected={selected} />
+    <section className="task-v2-workspace">
+      <aside className="task-v2-list">
+        <header className="task-v2-list-header"><div className="task-v2-scope"><strong>执行任务</strong><span>128</span><nav><button type="button" className={taskScope === "pending" ? "on" : ""} onClick={() => setTaskScope("pending")}>待处理</button><button type="button" className={taskScope === "all" ? "on" : ""} onClick={() => setTaskScope("all")}>全部任务</button></nav></div><nav className="task-v2-risk-filters"><button type="button" className={risk === "all" ? "on" : ""} onClick={() => setRisk("all")}>全部</button>{(["high", "medium", "low", "other"] as TaskRisk[]).map((item) => <button key={item} type="button" className={risk === item ? "on" : ""} onClick={() => setRisk(item)}><i className={item} />{({ high: "高风险", medium: "中风险", low: "低风险", other: "其他" } as Record<TaskRisk, string>)[item]} <span>{riskCounts[item]}</span></button>)}</nav></header>
+        <div className="task-v2-task-scroll">{shownTasks.length ? shownTasks.map((task) => { const index = taskData.indexOf(task); return <button type="button" onClick={() => { setActiveTask(index); setDetailTab("概览"); }} className={`task-v2-row ${activeTask === index ? "active" : ""}`} key={task.order}>
+          <span className="task-v2-row-top"><i className={task.risk} /> <em>{({ high: "高风险", medium: "中风险", low: "低风险", other: "其他" } as Record<TaskRisk, string>)[task.risk]}</em><strong>{task.title}</strong><time>{task.time}</time></span><p>{task.summary}</p><span className="task-v2-store"><span>♜</span>{task.store}<b className={task.mode === "人工" ? "manual" : "benben"}>{task.mode}</b></span><small>订单号 {task.order}<span className="task-v2-copy" role="button" tabIndex={0} aria-label="复制订单号" onClick={(event) => { event.stopPropagation(); announce("订单号已复制"); }} onKeyDown={(event) => { if (event.key === "Enter") announce("订单号已复制"); }}><img src={`${A}/copy.svg`} alt="" /></span></small>
+        </button>; }) : <div className="task-v2-empty"><strong>暂无匹配任务</strong><span>试试调整筛选条件</span></div>}</div>
+        <footer className="task-v2-list-footer"><button type="button" onClick={() => announce("已打开未匹配任务记录")}><span>♧</span>未匹配任务记录 <b>46</b><i>›</i></button><div><button type="button">⌁　评估中心</button><button type="button">◷　效能中心</button></div></footer>
+      </aside>
+      <TaskDetailPanel detailTab={detailTab} onTab={setDetailTab} selected={selected} onNotice={announce} />
     </section>
+    {notice && <div className="task-v2-toast" role="status">{notice}</div>}
   </main>;
+}
+
+type SettingsView = "intents" | "shopNavigation" | "dataManagement" | "dataAnalysis" | "orderConfig" | "tuning" | "sessions" | "shopManagement";
+
+const settingPageMeta: Record<SettingsView, { title: string; subtitle: string }> = {
+  intents: { title: "会话意图分发", subtitle: "CHAT INTENT DISTRIBUTION" },
+  shopNavigation: { title: "店铺AI导航配置", subtitle: "SHOP AI NAVIGATION CONFIGURATION" },
+  dataManagement: { title: "数据管理", subtitle: "TASK DATA MANAGEMENT" },
+  dataAnalysis: { title: "数据分析", subtitle: "TASK DATA ANALYSIS" },
+  orderConfig: { title: "建单配置", subtitle: "TASK CREATION CONFIGURATION" },
+  tuning: { title: "调优中心", subtitle: "TASK OPTIMIZATION CENTER" },
+  sessions: { title: "会话记录", subtitle: "MASTER-DETAIL SESSION EXPLORER" },
+  shopManagement: { title: "店铺管理", subtitle: "SHOP MANAGEMENT" },
+};
+
+function SettingsCenter({ onBack }: { onBack: () => void }) {
+  const [page, setPage] = useState<SettingsView>("intents");
+  const [notice, setNotice] = useState("");
+  const announce = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(""), 2200); };
+  const groups: Array<{ name: string; icon: string; pages: Array<[SettingsView, string]> }> = [
+    { name: "犇犇AI导航", icon: "◉", pages: [["intents", "会话意图分发"], ["shopNavigation", "店铺导航配置"]] },
+    { name: "犇犇AI建单", icon: "▦", pages: [["dataManagement", "数据管理"], ["dataAnalysis", "数据分析"], ["orderConfig", "建单配置"], ["tuning", "调优中心"]] },
+    { name: "会话管理", icon: "◔", pages: [["sessions", "会话记录"], ["shopManagement", "店铺管理"]] },
+  ];
+  const meta = settingPageMeta[page];
+
+  return <main className="settings-center">
+    <PlatformRail />
+    <aside className="settings-center-nav"><button className="settings-back" type="button" onClick={onBack}>‹ 返回</button><h1>配置中心</h1><nav>{groups.map((group) => <section key={group.name}><header><span>{group.icon}</span>{group.name}<i>⌃</i></header>{group.pages.map(([id, label]) => <button className={page === id ? "on" : ""} type="button" onClick={() => setPage(id)} key={id}>{label}</button>)}</section>)}</nav></aside>
+    <section className="settings-center-workspace"><header className="settings-page-heading"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></header><SettingsPage view={page} announce={announce} />{notice && <p className="settings-toast" role="status">✓ {notice}</p>}</section>
+  </main>;
+}
+
+function SettingsPage({ view, announce }: { view: SettingsView; announce: (message: string) => void }) {
+  if (view === "intents") return <IntentDistribution announce={announce} />;
+  if (view === "shopNavigation") return <ShopNavigation announce={announce} />;
+  if (view === "dataManagement") return <TaskDataManagement announce={announce} />;
+  if (view === "dataAnalysis") return <DataAnalysis />;
+  if (view === "orderConfig") return <OrderConfiguration announce={announce} />;
+  if (view === "tuning") return <TuningCenter announce={announce} />;
+  if (view === "sessions") return <SessionManagement announce={announce} />;
+  return <ShopManagement announce={announce} />;
+}
+
+function IntentDistribution({ announce }: { announce: (message: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [intents, setIntents] = useState([{ name: "少发", description: "消费者反馈收到的包裹中商品数量不足，缺少部分商品。", cards: 0 }, { name: "改地址", description: "买家需要改地址时触发该意图。", cards: 1 }, { name: "售后咨询", description: "消费者咨询退换货、退款进度或售后处理规则。", cards: 1 }]);
+  const visible = intents.filter((item) => `${item.name}${item.description}`.includes(query));
+  return <><div className="settings-toolbar"><label><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索意图名称" /></label><button className="settings-primary" type="button" onClick={() => { setIntents((items) => [...items, { name: `新意图 ${items.length + 1}`, description: "请在详情配置中补充触发条件与智能卡片。", cards: 0 }]); announce("已新增意图"); }}>＋ 新增意图</button></div><div className="intent-grid">{visible.map((intent) => <article key={intent.name}><header><span>◇</span><div><strong>{intent.name}</strong><em>消费者意图</em><p>{intent.description}</p></div><button type="button" aria-label={`编辑${intent.name}`} onClick={() => announce(`正在配置「${intent.name}」`)}>⌑</button><button type="button" aria-label={`删除${intent.name}`} onClick={() => { setIntents((items) => items.filter((item) => item.name !== intent.name)); announce("意图已删除"); }}>⌫</button></header><footer><span>智能卡片: {intent.cards} 个</span><button type="button" onClick={() => announce(`已打开「${intent.name}」详情配置`)}>详情配置</button></footer></article>)}</div></>;
+}
+
+function ShopNavigation({ announce }: { announce: (message: string) => void }) {
+  const [stores, setStores] = useState([{ name: "【淘宝】tb482158388801", id: "2217815690081", enabled: true, updated: "2026-07-29 14:17:10" }, { name: "【抖音】班牛小小店", id: "542710737", enabled: false, updated: "2026-08-17 14:02:03" }]);
+  return <><div className="settings-toolbar"><label><span>⌕</span><input placeholder="搜索店铺名称" /></label></div><div className="setting-table"><header><span>店铺名称</span><span>AI导航状态</span><span>订阅场景</span><span>最后更新</span><span>操作</span></header>{stores.map((store, index) => <article key={store.id}><div><b>◒</b><strong>{store.name}</strong><small>ID: {store.id}</small></div><button className={`setting-switch ${store.enabled ? "on" : ""}`} type="button" aria-pressed={store.enabled} onClick={() => setStores((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, enabled: !item.enabled } : item))}><i /></button><span>0 个已订阅</span><time>{store.updated}</time><button className="settings-link" type="button" onClick={() => announce(`已打开「${store.name}」导航配置`)}>配置</button></article>)}</div></>;
+}
+
+const taskRows = [{ id: "2331", buyer: "陈晓", shop: "班牛小小店", order: "AI建单测试", status: "分析完成", duration: "6s" }, { id: "2330", buyer: "多来米", shop: "班牛小小店", order: "AI建单测试", status: "分析完成", duration: "6s" }, { id: "2315", buyer: "赤丸", shop: "班牛小小店", order: "cw-AI-训练", status: "异常", duration: "-" }];
+
+function TaskDataManagement({ announce }: { announce: (message: string) => void }) {
+  const [keyword, setKeyword] = useState("");
+  const filtered = taskRows.filter((row) => `${row.id}${row.buyer}${row.order}`.includes(keyword));
+  return <><div className="setting-stat-row"><strong>今日建单量 <b>0</b></strong><strong>平均分析时长 <b>0s</b></strong></div><div className="setting-filter-grid"><label>平台<select><option>请选择</option><option>抖音</option><option>淘宝</option></select></label><label>订单号<input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="请输入订单号" /></label><label>店铺<select><option>请选择店铺</option><option>班牛小小店</option></select></label><label>状态<select><option>待处理</option><option>分析完成</option><option>异常</option></select></label><div><button className="settings-dark" type="button">查询</button><button className="settings-secondary" type="button" onClick={() => setKeyword("")}>重置</button></div></div><div className="settings-list-heading"><strong>任务列表</strong><button className="settings-secondary" type="button" onClick={() => announce("已取消选中任务")}>批量取消</button></div><TaskTable rows={filtered} announce={announce} /></>;
+}
+
+function TaskTable({ rows, announce }: { rows: typeof taskRows; announce: (message: string) => void }) {
+  return <div className="setting-table task-data-table"><header><span>任务ID</span><span>平台</span><span>买家昵称</span><span>店铺</span><span>订单号</span><span>任务时间</span><span>状态</span><span>分析时长</span><span>操作</span></header>{rows.map((row) => <article key={row.id}><b>{row.id}</b><span>抖音</span><span>{row.buyer}</span><span>{row.shop}</span><span>{row.order}</span><time>2026-09-15 17:12</time><em className={row.status === "异常" ? "warning" : "success"}>{row.status}</em><span>{row.duration}</span><div><button type="button" onClick={() => announce(`已打开任务 ${row.id} 详情`)}>任务详情</button><button type="button" onClick={() => announce("已打开聊天记录")}>聊天记录</button></div></article>)}</div>;
+}
+
+function DataAnalysis() { return <section className="settings-analysis"><div className="analysis-cards">{[["本周建单总量", "128", "+18.6%"], ["分析完成率", "96.8%", "+2.4%"], ["平均处理时长", "8.4s", "-1.2s"]].map(([label, value, trend]) => <article key={label}><span>{label}</span><strong>{value}</strong><em>{trend}</em></article>)}</div><article className="settings-panel"><header><strong>近七日建单趋势</strong><span>按任务量统计</span></header><div className="analysis-bars">{[42, 68, 53, 83, 61, 78, 92].map((height, index) => <span style={{ height: `${height}%` }} key={index}><i>{["周一", "周二", "周三", "周四", "周五", "周六", "周日"][index]}</i></span>)}</div></article></section>; }
+
+function OrderConfiguration({ announce }: { announce: (message: string) => void }) { const [enabled, setEnabled] = useState(true); return <section className="settings-config-list"><article><div><strong>自动建单开关</strong><p>满足意图识别与店铺规则时，自动创建后续处理任务。</p></div><button className={`setting-switch ${enabled ? "on" : ""}`} type="button" onClick={() => setEnabled((value) => !value)}><i /></button></article>{["订单类型映射", "默认工作表", "异常处理策略"].map((item) => <article key={item}><div><strong>{item}</strong><p>已配置默认规则，可按店铺或业务场景继续调整。</p></div><button className="settings-link" type="button" onClick={() => announce(`已打开${item}`)}>配置 ›</button></article>)}</section>; }
+
+function TuningCenter({ announce }: { announce: (message: string) => void }) { return <section className="settings-tuning"><article><header><strong>建单提示词调优</strong><span>当前版本 v3.2</span></header><textarea defaultValue="根据会话意图、订单信息与店铺策略，生成清晰、可执行的建单建议。" /><footer><button className="settings-secondary" type="button">恢复默认</button><button className="settings-dark" type="button" onClick={() => announce("调优配置已保存")}>保存配置</button></footer></article><article><strong>最近调优记录</strong><p>2026-09-15　更新了售后场景的风险识别规则。</p><p>2026-09-11　补充了异常订单的转人工条件。</p></article></section>; }
+
+function SessionManagement({ announce }: { announce: (message: string) => void }) { const [query, setQuery] = useState(""); const rows = [{ id: "S20260915001", name: "王小明", shop: "班牛小小店", summary: "咨询退款进度与包裹状态", time: "2026-09-15 17:12" }, { id: "S20260915002", name: "李青", shop: "班牛数码专营店", summary: "咨询修改收货地址", time: "2026-09-15 16:48" }].filter((row) => `${row.id}${row.name}`.includes(query)); return <><div className="setting-filter-grid session-filter"><label>店铺<select><option>全部店铺</option><option>班牛小小店</option></select></label><label>会员昵称<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="请输入会员昵称" /></label><label>最后进线时间<input type="date" /></label><div><button className="settings-dark" type="button">搜索</button><button className="settings-secondary" type="button" onClick={() => setQuery("")}>重置</button></div></div><div className="settings-list-heading"><strong>会员会话列表 <small>共 {rows.length} 条记录</small></strong></div><div className="setting-table session-table"><header><span>店铺</span><span>会员会话ID</span><span>会员昵称</span><span>会话总结</span><span>最近会话时间</span><span>操作</span></header>{rows.map((row) => <article key={row.id}><span>{row.shop}</span><b>{row.id}</b><span>{row.name}</span><span>{row.summary}</span><time>{row.time}</time><button className="settings-link" type="button" onClick={() => announce(`已打开 ${row.name} 的会话详情`)}>查看详情</button></article>)}</div></>;
+}
+
+function ShopManagement({ announce }: { announce: (message: string) => void }) { const [stores, setStores] = useState([{ name: "班牛小小店", platform: "抖音", enabled: true }, { name: "班牛数码专营店", platform: "淘宝", enabled: true }]); return <><div className="settings-toolbar"><label><span>⌕</span><input placeholder="搜索店铺名称" /></label><button className="settings-primary" type="button" onClick={() => announce("已打开新增店铺流程")}>＋ 新增店铺</button></div><div className="setting-table shops-table"><header><span>店铺名称</span><span>平台</span><span>会话管理状态</span><span>最后更新</span><span>操作</span></header>{stores.map((store, index) => <article key={store.name}><strong>{store.name}</strong><span>{store.platform}</span><button className={`setting-switch ${store.enabled ? "on" : ""}`} type="button" onClick={() => setStores((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, enabled: !item.enabled } : item))}><i /></button><time>2026-09-16 10:24</time><button className="settings-link" type="button" onClick={() => announce(`已打开「${store.name}」配置`)}>配置</button></article>)}</div></>;
 }
 
 type ChatExpert = "insight" | "ipaas";
@@ -113,63 +261,180 @@ const chatExperts = {
   },
 } as const;
 
-function ChatHome({ menuOpen }: { menuOpen: boolean }) {
+function ChatUiIcon({ name }: { name: string }) {
+  const paths: Record<string, string> = {
+    new: "M12 8v8m-4-4h8M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0",
+    plus: "M12 5v14M5 12h14", close: "m6 6 12 12M6 18 18 6",
+    panel: "M8 3v18M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1",
+    chat: "M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2M7 10h.01M12 10h.01M17 10h.01",
+    more: "M5 12h.01M12 12h.01M19 12h.01",
+    model: "m12 3 10 5-10 5L2 8l10-5M2 12l10 5 10-5M2 16l10 5 10-5",
+    attach: "m8 12 7-7a3 3 0 0 1 4 4L9 19a5 5 0 0 1-7-7L13 1m-7 13 9-9",
+    expert: "M8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0M4 21v-2a8 8 0 0 1 16 0v2",
+    plugin: "m8 16 8-8m-9 5-3 3a4 4 0 0 0 6 6l3-3m-2-14 3-3a4 4 0 0 1 6 6l-3 3",
+    file: "M14 3H5v18h14V8l-5-5v5h5M8 12h8M8 16h6",
+    globe: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0M2 12h20M12 2c-5 5-5 15 0 20 5-5 5-15 0-20",
+    down: "m6 9 6 6 6-6", arrow: "M4 12h16m-6-6 6 6-6 6",
+    stop: "M6 6h12v12H6z", shield: "m12 2 9 3v6c0 6-9 11-9 11S3 17 3 11V5l9-3m-5 9 3 3 6-6"
+  };
+  return <svg className="chat-ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name] || paths.chat} /></svg>;
+}
+
+function ChatHome({ menuOpen, initialSettings = false }: { menuOpen: boolean; initialSettings?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(menuOpen);
-  const [selectedExpert, setSelectedExpert] = useState<ChatExpert | null>(null);
-  const [stage, setStage] = useState<ChatStage>("welcome");
-  const [expanded, setExpanded] = useState(false);
-  const [message, setMessage] = useState("");
   const [historyOpen, setHistoryOpen] = useState(true);
-  const expert = selectedExpert ? chatExperts[selectedExpert] : null;
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+  const [thread, setThread] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
+  const [sending, setSending] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [modelOpen, setModelOpen] = useState(false);
+  const [model, setModel] = useState("DeepSeek V4 Flash");
+  const [composerMenu, setComposerMenu] = useState<"root" | "experts" | null>(null);
+  const [selectedExpert, setSelectedExpert] = useState<string | null>(null);
+  const [settingsPage, setSettingsPage] = useState(initialSettings);
+  const settingsOpen = false;
+  const setSettingsOpen = (_open?: boolean) => {
+    const params = new URLSearchParams({ design: "1404-1392", settings: "1", from: "chat" });
+    if (settingsPage) params.set("chatView", "settings");
+    window.sessionStorage.setItem("benben-settings-return-chat", `/?${params.toString()}`);
+    window.location.assign(`/?${params.toString()}`);
+  };
+  const [skillsOpen, setSkillsOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark" | "glass" | "clear">("light");
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const uploadRef = useRef<HTMLInputElement>(null);
+  const [history, setHistory] = useState([
+    { id: "weekly", title: "本周退款原因洞察报告" }, { id: "solution", title: "退货退款方案总结" },
+    { id: "review", title: "评价自动分类与派发" }, { id: "risk", title: "退货退款风险原因分析" }, { id: "after", title: "售后策略生成" },
+  ]);
+  const [historyMenu, setHistoryMenu] = useState<string | null>(null);
+  const [renameTarget, setRenameTarget] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
+  const [threadCache, setThreadCache] = useState<Record<string, Array<{role: "user" | "assistant"; text: string}>>>({});
+  const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const models = ["DeepSeek V4 Flash", "DeepSeek V4 Pro", "DeepSeek V4 Flash Vision", "Qwen3.8 Flash", "Qwen3.8 Max"];
+  const experts = ["退款报告分析专家", "售后策略专家", "物流履约专家"];
+  const activeTitle = history.find((item) => item.id === activeConversation)?.title || "新建对话";
+  const searchResults = history.filter((item) => item.title.includes(searchQuery.trim()));
 
   useEffect(() => {
-    if (!isMenuOpen) return;
-    const closeMenu = (event: MouseEvent) => {
-      const target = event.target;
-      if (target instanceof Element && !target.closest(".product, .product-menu")) setIsMenuOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setIsMenuOpen(false); };
-    document.addEventListener("mousedown", closeMenu);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => { document.removeEventListener("mousedown", closeMenu); document.removeEventListener("keydown", closeOnEscape); };
-  }, [isMenuOpen]);
+    if (window.matchMedia("(max-width: 900px)").matches) setHistoryOpen(false);
+  }, []);
 
-  const startConversation = (kind: ChatExpert, prompt?: string) => {
-    setSelectedExpert(kind); setStage("welcome"); setExpanded(false); setMessage(prompt || "");
+  useEffect(() => {
+    const closeFloatingPanels = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (!target.closest(".chat-v3-history-row")) setHistoryMenu(null);
+      if (!target.closest(".chat-v3-product-wrap")) setIsMenuOpen(false);
+      if (!target.closest(".chat-v3-model-wrap")) setModelOpen(false);
+      if (!target.closest(".chat-v3-composer-tools")) setComposerMenu(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsMenuOpen(false); setSearchOpen(false); setModelOpen(false); setComposerMenu(null); setHistoryMenu(null); setRenameTarget(null);
+    };
+    document.addEventListener("mousedown", closeFloatingPanels);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("mousedown", closeFloatingPanels); document.removeEventListener("keydown", closeOnEscape); };
+  }, []);
+
+  useEffect(() => setSettingsPage(initialSettings), [initialSettings]);
+
+  useEffect(() => () => { if (replyTimer.current) clearTimeout(replyTimer.current); }, []);
+  const stopReply = () => { if (replyTimer.current) clearTimeout(replyTimer.current); setSending(false); };
+  const saveCurrentThread = () => { if (activeConversation) setThreadCache((cache) => ({ ...cache, [activeConversation]: thread })); };
+  const newConversation = () => {
+    saveCurrentThread(); stopReply(); setHistoryMenu(null);
+    if (window.matchMedia("(max-width: 900px)").matches) setHistoryOpen(false);
+    setActiveConversation(null); setThread([]); setMessage(""); setAttachments([]); setSelectedExpert(null); setSending(false); setSettingsPage(false);
+  };
+  const selectConversation = (id: string) => {
+    saveCurrentThread(); stopReply(); setHistoryMenu(null);
+    if (window.matchMedia("(max-width: 900px)").matches) setHistoryOpen(false);
+    const selected = history.find((item) => item.id === id);
+    setActiveConversation(id); setThread(threadCache[id] || (selected ? [{ role: "assistant", text: `已为你打开「${selected.title}」。你可以继续提问，或选择专家协助处理。` }] : [])); setSending(false); setSettingsPage(false);
   };
   const sendMessage = () => {
-    if (!message.trim()) return;
-    setStage("working"); setExpanded(true);
-    window.setTimeout(() => setStage("done"), 1200);
+    const text = message.trim();
+    if (!text || sending) return;
+    const conversationId = activeConversation || `local-${Date.now()}`;
+    if (!activeConversation) { setActiveConversation(conversationId); setHistory((items) => [{ id: conversationId, title: text.slice(0, 32) }, ...items]); }
+    setThread((items) => [...items, { role: "user", text }]);
+    setMessage(""); setAttachments([]); setSending(true);
+    replyTimer.current = setTimeout(() => { setThread((items) => [...items, { role: "assistant", text: selectedExpert ? `「${selectedExpert}」已收到你的问题。我已整理关键经营信息，并给出下一步处理建议。` : "我已收到你的问题。可以选择专家、附加资料，或继续补充业务背景。" }]); setSending(false); }, 700);
   };
 
-  return <main className="task-app chat-home">
+  const rememberChatReturn = () => {
+    const params = new URLSearchParams({ design: "1404-1392" });
+    if (settingsPage) params.set("chatView", "settings");
+    window.sessionStorage.setItem("benben-expert-return-chat", `/?${params.toString()}`);
+  };
+
+  return <main className={`task-app chat-home chat-home-v3 theme-${theme} ${historyOpen ? "history-is-open" : "history-is-collapsed"} ${settingsPage ? "settings-page-open" : ""}`} onClickCapture={(event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const link = target.closest('a[href*="expert=1"]') as HTMLAnchorElement | null;
+    if (link) {
+      rememberChatReturn();
+      window.sessionStorage.setItem("benben-expert-source", "chat");
+      link.href = "/?design=1404-1493&expert=1&from=chat";
+    }
+  }}>
     <aside className="side-rail"><img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" /><RailButtons /><img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" /></aside>
-    <header className="topbar">
-      <button className={`product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>
-      {isMenuOpen && <ProductMenu current="chat" />}
-      <div className="top-search"><img src={`${A}/search-top.svg`} alt="" /><input placeholder="搜索历史对话" /></div>
-      <a className="experts-button" href="/?design=1404-1493&expert=1"><img src={`${A}/benben.png`} alt="" />专家·技能·连接器</a><i />
-      <button className="settings chat-settings" type="button"><img src={`${A}/settings-16.svg`} alt="" />设置</button>
-    </header>
-    {!expert ? <ChatPicker onSelect={startConversation} /> : <section className={`chat-shell ${historyOpen ? "history-open" : ""}`}>
-      <aside className="chat-history">
-        <button className="history-expand" type="button" aria-label="展开历史对话" onClick={() => setHistoryOpen(true)}><span>›</span></button>
-        <div className="history-home"><button type="button" aria-label="主页" onClick={() => setSelectedExpert(null)}><img src={`${A}/home.svg`} alt="" /><span>主页</span></button><button className="history-collapse" type="button" aria-label="收起历史对话" onClick={() => setHistoryOpen(false)}><i /><i /></button></div>
-        <div className="history-divider" />
-        <button className="history-new" type="button" onClick={() => { setStage("welcome"); setMessage(""); }}><span>＋</span><em>新建对话</em></button>
-        <p>历史对话</p>
-        {stage === "welcome" ? <small className="history-empty">暂无历史对话</small> : <>
-          <button className="history-item active" type="button" onClick={() => setHistoryOpen(true)}><span className="history-message" aria-hidden="true" /><em>{expert.conversation}</em><small>刚刚</small><b>···</b></button>
-          <button className="history-item" type="button" onClick={() => setHistoryOpen(true)}><span className="history-message" aria-hidden="true" /><em>{selectedExpert === "insight" ? "上月售后数据分析" : "接口鉴权配置"}</em><small>昨天</small><b>···</b></button>
-        </>}
-      </aside>
-      <section className="chat-thread">
-        {stage === "welcome" ? <ChatWelcome expert={expert} onPrompt={(prompt) => { setMessage(prompt); window.setTimeout(sendMessage, 0); }} /> : <ChatConversation expert={expert} stage={stage} expanded={expanded} onToggle={() => setExpanded((value) => !value)} message={message} />}
-        <ChatComposer message={message} setMessage={setMessage} onSend={sendMessage} />
-      </section>
-    </section>}
+    <header className="chat-v3-topbar"><div className="chat-v3-product-wrap"><button className={`chat-v3-product ${isMenuOpen ? "open" : ""}`} type="button" aria-label="切换产品" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="chat" />}</div><button type="button" className="chat-v3-search-trigger" aria-label="搜索会话" onClick={() => { setSearchOpen(true); setSearchQuery(""); }}><img src={`${A}/search-top.svg`} alt="" /></button><button className="chat-v3-mobile-history" type="button" aria-label="展开会话列表" onClick={() => setHistoryOpen((open) => !open)}><ChatUiIcon name="panel" /></button><a className="chat-v3-hub-link" href="/?design=1404-1493&expert=1"><span>✧</span>专家·技能·连接器</a><i /><button className="chat-v3-settings" type="button" onClick={() => setSettingsOpen(true)}><img src={`${A}/settings-16.svg`} alt="" />设置</button></header>
+    <section className={`chat-v3-shell ${historyOpen ? "history-open" : "history-collapsed"}`}><aside className="chat-v3-history" aria-label="会话列表">
+      <header><button type="button" onClick={newConversation}><ChatUiIcon name="new" /><span>新建对话</span></button><button type="button" aria-label={historyOpen ? "收起会话列表" : "展开会话列表"} onClick={() => setHistoryOpen((open) => !open)}><ChatUiIcon name="panel" /></button></header>
+      {historyOpen && <><h2>历史对话</h2><div className="chat-v3-history-list">{history.map((item) => <div className={`chat-v3-history-row ${activeConversation === item.id ? "active" : ""}`} key={item.id}>
+        <button type="button" title={item.title} onClick={() => selectConversation(item.id)}><ChatUiIcon name="chat" /><em>{item.title}</em></button>
+        <button type="button" className="chat-v3-history-more" aria-label={`${item.title}更多操作`} aria-expanded={historyMenu === item.id} onClick={() => setHistoryMenu(historyMenu === item.id ? null : item.id)}><ChatUiIcon name="more" /></button>
+        {historyMenu === item.id && <div className="chat-v3-history-menu"><button type="button" onClick={() => { setRenameTarget(item.id); setRenameDraft(item.title); setHistoryMenu(null); }}>重命名</button><button type="button" onClick={() => { setHistory((items) => items.filter((entry) => entry.id !== item.id)); if(activeConversation === item.id) newConversation(); setHistoryMenu(null); }}>删除对话</button></div>}
+      </div>)}</div></>}
+    </aside><main className={`chat-v3-main ${activeConversation ? "has-conversation" : "is-welcome"}`}>{activeConversation ? <section className="chat-v3-thread"><header><h1>{activeTitle}</h1><span>{selectedExpert ? `已选择 ${selectedExpert}` : "犇犇Chat"}</span></header><div className="chat-v3-messages">{thread.map((item, index) => <article className={item.role} key={`${item.role}-${index}`}><b>{item.role === "user" ? "我" : "犇犇"}</b><p>{item.text}</p></article>)}{sending && <article className="assistant pending"><b>犇犇</b><p><i />正在思考…</p></article>}</div></section> : <section className="chat-v3-empty"><img src="/benben-chat-banner.png" alt="BENBEN" /></section>}<div className="chat-v3-composer"><div className="chat-v3-attachments">{attachments.map((file) => <span key={file}>{file}<button type="button" onClick={() => setAttachments((items) => items.filter((item) => item !== file))}>×</button></span>)}</div><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); sendMessage(); } }} placeholder="给犇犇发送消息" /><footer><div className="chat-v3-composer-tools"><input ref={uploadRef} type="file" multiple hidden onChange={(event) => setAttachments(Array.from(event.target.files || []).map((file) => file.name))} /><button className={`chat-v3-plus ${composerMenu ? "open" : ""}`} type="button" aria-label="添加功能" aria-expanded={!!composerMenu} onClick={() => setComposerMenu((open) => open ? null : "root")}><ChatUiIcon name={composerMenu ? "close" : "plus"} /></button>{composerMenu && <div className="chat-v3-composer-menu">{composerMenu === "root" ? <><button type="button" onClick={() => { uploadRef.current?.click(); setComposerMenu(null); }}><ChatUiIcon name="attach" />文件和图片</button><button type="button" onClick={() => setComposerMenu("experts")}><ChatUiIcon name="expert" />专家 <i>›</i></button><button type="button" disabled><ChatUiIcon name="plugin" />插件 <i>›</i></button><button type="button" disabled><ChatUiIcon name="file" />技能 <i>›</i></button><button type="button" disabled><ChatUiIcon name="globe" />联网搜索 <i>›</i></button></> : <><button type="button" className="chat-v3-back" onClick={() => setComposerMenu("root")}>‹　专家</button>{experts.map((expert) => <button type="button" onClick={() => { setSelectedExpert(expert); setComposerMenu(null); }} key={expert}>{selectedExpert === expert ? "✓　" : "　　"}{expert}</button>)}<a href="/?design=1404-1493&expert=1">✧　召唤更多专家</a></>}</div>}</div>{selectedExpert && <span className="chat-v3-expert-chip">{selectedExpert}<button type="button" aria-label="取消选择专家" onClick={() => setSelectedExpert(null)}><ChatUiIcon name="close" /></button></span>}<div className="chat-v3-model-wrap"><button type="button" className="chat-v3-model" aria-expanded={modelOpen} onClick={() => setModelOpen((open) => !open)}><ChatUiIcon name="model" />{model}<ChatUiIcon name="down" /></button>{modelOpen && <div className="chat-v3-model-menu">{models.map((item) => <button type="button" className={model === item ? "on" : ""} onClick={() => { setModel(item); setModelOpen(false); }} key={item}><ChatUiIcon name="model" />{item}{model === item && <i>●</i>}</button>)}<button type="button" className="chat-v3-model-manage" onClick={() => setSettingsOpen(true)}>⚙　模型管理</button></div>}</div><button type="button" className="chat-v3-send" disabled={!sending && !message.trim()} onClick={sending ? stopReply : sendMessage}>{sending ? "停止" : "发送"}<ChatUiIcon name={sending ? "stop" : "arrow"} /></button></footer><small><ChatUiIcon name="shield" />数据安全防护中</small></div>
+      {!activeConversation && <section className="chat-v3-more-content"><h2>更多内容</h2><p>主题切换</p><div>{([["light", "浅色"], ["dark", "深色"], ["glass", "玻璃"], ["clear", "清透"]] as const).map(([value,label]) => <button key={value} type="button" className={`chat-v3-theme-card ${value} ${theme === value ? "on" : ""}`} aria-pressed={theme === value} onClick={() => setTheme(value)}><i /><span>{label}</span>{theme === value && <b>✓</b>}</button>)}</div></section>}
+    </main></section>
+    {renameTarget && <div className="chat-v3-modal-layer" onMouseDown={() => setRenameTarget(null)}><form className="chat-v3-rename-dialog" role="dialog" aria-label="重命名对话" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); if (!renameDraft.trim()) return; setHistory((items) => items.map((item) => item.id === renameTarget ? {...item, title: renameDraft.trim()} : item)); setRenameTarget(null); }}><h2>重命名对话</h2><input autoFocus aria-label="对话名称" value={renameDraft} onChange={(event) => setRenameDraft(event.target.value)} /><footer><button type="button" onClick={() => setRenameTarget(null)}>取消</button><button type="submit" disabled={!renameDraft.trim()}>保存</button></footer></form></div>}
+    {searchOpen && <div className="chat-v3-modal-layer" onMouseDown={() => setSearchOpen(false)}><section className="chat-v3-search-modal" role="dialog" aria-label="搜索会话" onMouseDown={(event) => event.stopPropagation()}><header><img src={`${A}/search-top.svg`} alt="" /><input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜索会话内容..." /><button type="button" onClick={() => setSearchOpen(false)}>×</button></header>{searchQuery ? <div>{searchResults.length ? searchResults.map((item) => <button type="button" onClick={() => { selectConversation(item.id); setSearchOpen(false); }} key={item.id}><span>▢</span>{item.title}</button>) : <p>未找到匹配会话</p>}</div> : <p>输入关键词搜索会话内容</p>}</section></div>}
+    {skillsOpen && <div className="chat-v3-modal-layer" onMouseDown={() => setSkillsOpen(false)}><section className="chat-v3-side-modal" onMouseDown={(event) => event.stopPropagation()}><header><strong>我的技能</strong><button type="button" onClick={() => setSkillsOpen(false)}>×</button></header>{["售后订单查询", "退款原因归因", "物流履约跟进"].map((skill) => <button type="button" onClick={() => { setMessage(`请使用「${skill}」帮我处理当前问题`); setSkillsOpen(false); }} key={skill}><span>✦</span>{skill}<i>›</i></button>)}</section></div>}
+    {settingsOpen && <div className="chat-v3-modal-layer" onMouseDown={() => setSettingsOpen(false)}><section className="chat-v3-settings-modal" onMouseDown={(event) => event.stopPropagation()}><header><strong>主题切换</strong><button type="button" onClick={() => setSettingsOpen(false)}>×</button></header><div>{([ ["light", "浅色"], ["dark", "深色"], ["glass", "玻璃"], ["clear", "清透"] ] as const).map(([value, label]) => <button type="button" className={theme === value ? "on" : ""} onClick={() => setTheme(value)} key={value}><i /><span>{label}</span></button>)}</div></section></div>}
+    {settingsPage && <ChatV3SettingsPage theme={theme} onThemeChange={setTheme} />}
   </main>;
+}
+
+function ChatV3SettingsPage({ theme, onThemeChange }: { theme: "light" | "dark" | "glass" | "clear"; onThemeChange: (theme: "light" | "dark" | "glass" | "clear") => void }) {
+  const [platform, setPlatform] = useState<"飞书" | "钉钉">("飞书");
+  const [binding, setBinding] = useState("新建");
+  const [appId, setAppId] = useState("18114015046");
+  const [secret, setSecret] = useState("123456789012");
+  const [note, setNote] = useState("");
+  const [title, setTitle] = useState("飞书对话");
+  const [notice, setNotice] = useState("");
+  const themeOptions = [["light", "浅色"], ["dark", "深色"], ["glass", "玻璃"], ["clear", "清透"]] as const;
+
+  return <section className="chat-v3-settings-page" aria-label="设置">
+    <div className="chat-v3-settings-content">
+      <h1>设置</h1>
+      <section className="chat-v3-settings-section">
+        <h2>主题切换</h2>
+        <div className="chat-v3-theme-options">{themeOptions.map(([value, label]) => <button type="button" className={`${theme === value ? "on" : ""} ${value}`} aria-pressed={theme === value} onClick={() => onThemeChange(value)} key={value}><i><span /><b /><em /></i><strong>{label}</strong>{theme === value && <small>✓</small>}</button>)}</div>
+      </section>
+      <section className="chat-v3-settings-section chat-v3-im-section">
+        <h2>IM 绑定</h2>
+        <label className="chat-v3-settings-label">已有绑定<select value={binding} onChange={(event) => setBinding(event.target.value)}><option>新建</option><option>飞书售后助手</option><option>钉钉客服助手</option></select></label>
+        <div className="chat-v3-platform-switch"><button type="button" className={platform === "飞书" ? "on" : ""} onClick={() => setPlatform("飞书")}>飞书</button><button type="button" className={platform === "钉钉" ? "on" : ""} onClick={() => setPlatform("钉钉")}>钉钉</button></div>
+        <div className="chat-v3-binding-fields">
+          <label>App ID<input value={appId} onChange={(event) => setAppId(event.target.value)} /></label>
+          <label>App Secret<input type="password" value={secret} onChange={(event) => setSecret(event.target.value)} /></label>
+          <label>备注<input value={note} onChange={(event) => setNote(event.target.value)} placeholder="请输入备注（可选）" /></label>
+          <label>会话标题<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={`${platform}对话`} /></label>
+        </div>
+        <button className="chat-v3-generate" type="button" onClick={() => setNotice(`${platform}会话「${title || `${platform}对话`}」已生成`)}>生成</button>
+        {notice && <p className="chat-v3-settings-notice" role="status">✓ {notice}</p>}
+      </section>
+    </div>
+  </section>;
 }
 
 function ChatPicker({ onSelect }: { onSelect: (kind: ChatExpert) => void }) {
@@ -205,7 +470,7 @@ function ChatComposer({ message, setMessage, onSend }: { message: string; setMes
 }
 
 function ProductMenu({ current }: { current: "task" | "chat" }) {
-  return <div className="product-menu"><button type="button" className={current === "task" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1493")}><strong>犇犇Task</strong><small>端到端任务协同与履约焕新</small>{current === "task" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button><button type="button" className={current === "chat" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1392")}><strong>犇犇Chat</strong><small>对话式业务洞察与决策支持</small>{current === "chat" && <b><img src={`${A}/complete-menu.svg`} alt="已选中" /></b>}</button></div>;
+  return <div className="product-menu"><button type="button" className={current === "chat" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1392")}><strong>犇犇Chat</strong><small>对话式业务洞察与决策支持</small>{current === "chat" && <b aria-label="已选中">✓</b>}</button><button type="button" className={current === "task" ? "current" : ""} onClick={() => window.location.assign("/?design=1404-1493")}><strong>犇犇Task</strong><small>端到端任务协同与履约焕新</small>{current === "task" && <b aria-label="已选中">✓</b>}</button></div>;
 }
 
 const expertCatalog = [
@@ -245,6 +510,7 @@ function ExpertHub({ onBack, section }: { onBack: () => void; section: ExpertSec
   const [view, setView] = useState<"cards" | "list">("cards");
   const [selected, setSelected] = useState<Expert | null>(null);
   const [customExperts, setCustomExperts] = useState<Expert[]>([]);
+  const [customExpertsLoaded, setCustomExpertsLoaded] = useState(false);
   const [expertScope, setExpertScope] = useState<"market" | "mine">("market");
   const [productFilter, setProductFilter] = useState<"all" | "chat" | "task">("all");
   const [filter, setFilter] = useState("全部");
@@ -257,7 +523,20 @@ function ExpertHub({ onBack, section }: { onBack: () => void; section: ExpertSec
   const isCustom = (expert: Expert) => customExperts.some(([id]) => id === expert[0]);
   const isRecruited = (expert: Expert) => isCustom(expert) || recruitedIds.includes(expert[0]);
   const allExperts = [...expertCatalog, ...customExperts];
-  const visibleExperts = allExperts.filter((expert) => (expertScope === "market" ? !isCustom(expert) : isRecruited(expert)) && (productFilter === "all" || expertProduct(expert) === productFilter) && (filter === "全部" || expertCategory(expert) === filter) && `${expert[1]}${expert[3]}`.includes(query.trim()));
+  const visibleExperts = allExperts.filter((expert) => (expertScope === "market" ? !isCustom(expert) : isCustom(expert)) && (expertScope === "mine" || ((productFilter === "all" || expertProduct(expert) === productFilter) && (filter === "全部" || expertCategory(expert) === filter))) && `${expert[1]}${expert[3]}`.includes(query.trim()));
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("benben-custom-experts");
+      if (saved) setCustomExperts(JSON.parse(saved) as Expert[]);
+    } catch { /* 忽略旧版本中不可解析的本地数据。 */ }
+    setCustomExpertsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!customExpertsLoaded) return;
+    window.localStorage.setItem("benben-custom-experts", JSON.stringify(customExperts));
+  }, [customExperts, customExpertsLoaded]);
   if (workspaceExpert) return <CustomExpertWorkspace expert={workspaceExpert} onBack={() => setWorkspaceExpert(null)} />;
   if (section === "connectors") return <ConnectorCenter onBack={onBack} />;
   return <main className="expert-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a className={section === "experts" ? "on" : ""} href="/?design=1404-1493&expert=1&section=experts">专家</a><a className={section === "skills" ? "on" : ""} href="/?design=1404-1493&expert=1&section=skills">技能</a><a className={section === "connectors" ? "on" : ""} href="/?design=1404-1493&expert=1&section=connectors">连接器</a><button className="management-settings" type="button" aria-label="设置"><img src={`${A}/settings-16.svg`} alt="" /></button></header>{section === "skills" ? <SkillsCenter /> : <section className="expert-hub-body"><div className="library-toolbar library-top-row expert-management-top"><div className="library-scope expert-scope"><button className={expertScope === "market" ? "on" : ""} type="button" onClick={() => { setExpertScope("market"); setFilter("全部"); }}>专家</button><button className={expertScope === "mine" ? "on" : ""} type="button" onClick={() => { setExpertScope("mine"); setFilter("全部"); }}>我的专家</button></div><div className="expert-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索专家名称" /></label><button className="new-expert" type="button" onClick={() => setCreateOpen(true)}>＋ 创建犇犇专家</button></div></div><div className="expert-toolbar expert-category-toolbar"><nav className="expert-product-filter" aria-label="产品筛选"><button aria-pressed={productFilter === "all"} className={productFilter === "all" ? "active" : ""} type="button" onClick={() => setProductFilter("all")}>全部</button><button aria-pressed={productFilter === "chat"} className={productFilter === "chat" ? "active" : ""} type="button" onClick={() => setProductFilter("chat")}>犇犇Chat</button><button aria-pressed={productFilter === "task"} className={productFilter === "task" ? "active" : ""} type="button" onClick={() => setProductFilter("task")}>犇犇Task</button></nav><nav aria-label="业务类型筛选">{["全部", "售后处理", "工单审核", "订单与交易", "物流履约", "风险识别"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}</nav></div><div className={`expert-grid ${view}`}>{visibleExperts.map((expert) => { const custom = isCustom(expert); const recruited = isRecruited(expert); const openSystem = () => { setTab("我的简介"); setSelected(expert); }; return <article className={`expert-tile ${recruited ? "recruited" : "unrecruited"} ${custom ? "custom-expert" : "system-expert"}`} onClick={custom ? () => setWorkspaceExpert(expert) : openSystem} onKeyDown={(event) => { if (event.key === "Enter") custom ? setWorkspaceExpert(expert) : openSystem(); }} role="button" tabIndex={0} key={expert[0]}><header><img src={expertImage(expert)} alt="" /><div><div className="expert-title-row"><strong>{expert[1]}</strong><em className={`product-tag ${expertProduct(expert)}`}>{expertProduct(expert) === "chat" ? "犇犇Chat" : "犇犇Task"}</em></div><div className="expert-tags"><em>{custom ? "自定义" : "系统专家"}</em><em className="category-tag">{expertCategory(expert)}</em></div></div>{recruited ? <span>✓ 已招募</span> : <span className="recruit-label"><i>未招募</i><b>去招募　→</b></span>}</header><p>{expert[3]}</p>{custom && <span className="open-config">打开配置　→</span>}</article>; })}</div>{expertScope === "mine" && !visibleExperts.length && <p className="custom-empty">还没有我的专家，先在专家中完成招募吧。</p>}</section>}{createOpen && <CreateExpertModal onClose={() => setCreateOpen(false)} onContinue={(expert) => { setCustomExperts((all) => all.some(([id]) => id === expert[0]) ? all : [...all, expert]); setExpertScope("mine"); setProductFilter("all"); setFilter("全部"); setCreateOpen(false); setWorkspaceExpert(expert); }} />}{selected && <RecruitModal expert={selected} tab={tab} setTab={setTab} recruited={recruitedIds.includes(selected[0])} config={recruitConfigs[selected[0]]} onConfigChange={(config) => setRecruitConfigs((all) => ({ ...all, [selected[0]]: config }))} onClose={() => setSelected(null)} onRecruit={() => { setRecruitedIds((ids) => ids.includes(selected[0]) ? ids : [...ids, selected[0]]); setSelected(null); }} onCancelRecruit={() => { setRecruitedIds((ids) => ids.filter((id) => id !== selected[0])); setSelected(null); }} />}</main>;
@@ -322,11 +601,25 @@ function SkillsCenter() {
   const [queryDraft, setQueryDraft] = useState("");
   const [query, setQuery] = useState("");
   const [mySkills, setMySkills] = useState<Skill[]>([]);
+  const [mySkillsLoaded, setMySkillsLoaded] = useState(false);
   const [editorSkill, setEditorSkill] = useState<Skill | null | undefined>(undefined);
   const [notice, setNotice] = useState("");
   const categories = ["全部", "订单", "工单", "售后", "物流", "通用"];
   const currentSkills = scope === "system" ? skillCatalog : mySkills;
   const filtered = currentSkills.filter((skill) => (filter === "全部" || skill.category === filter) && `${skill.name}${skill.description}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("benben-custom-skills");
+      if (saved) setMySkills(JSON.parse(saved) as Skill[]);
+    } catch { /* 忽略旧版本中不可解析的本地数据。 */ }
+    setMySkillsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mySkillsLoaded) return;
+    window.localStorage.setItem("benben-custom-skills", JSON.stringify(mySkills));
+  }, [mySkills, mySkillsLoaded]);
 
   useEffect(() => {
     if (!notice) return;
@@ -487,9 +780,73 @@ function FilterPanel({ risk, onRisk }: { risk: string; onRisk: (value: string) =
   return <aside className="filters"><h2>任务中心</h2><button type="button" className={`processing ${activeQueue === "processing" ? "on" : ""}`} onClick={() => chooseQueue("processing")}><img src={`${A}/ongoing-task.svg`} alt="" />进行中 <b>147</b></button><div className="risk-options">{risks.map(([key, label, number]) => <button type="button" onClick={() => chooseQueue(key)} className={activeQueue === key ? "on" : ""} key={key}><img src={`${A}/risk-${key}.svg`} alt="" />{label}<b>{number}</b></button>)}</div><div className="expert-type"><span>专家类型</span></div><div className="expert-tabs">{["服务履约", "自定义"].map((item) => <button type="button" className={expertType === item ? "on" : ""} onClick={() => setExpertType(item)} key={item}>{item}</button>)}</div><div className="expert-list">{experts.map(([image, title]) => <button type="button" key={title}><img src={`${A}/${image}`} alt="" />{title}</button>)}</div><button className="unmatched" type="button"><img src={`${A}/unmatched.svg`} alt="" />未匹配任务记录 <b>35</b></button></aside>;
 }
 
-function DetailPanel({ detailTab, onTab, selected }: { detailTab: string; onTab: (tab: string) => void; selected: typeof taskData[number] }) {
+function TaskDetailPanel({ detailTab, onTab, selected, onNotice }: { detailTab: string; onTab: (tab: string) => void; selected: typeof taskData[number]; onNotice: (message: string) => void }) {
   const tabs = ["概览", "工单", "订单", "物流", "会话"];
-  return <section className="detail"><header><nav>{tabs.map((tab) => <button type="button" className={detailTab === tab ? "on" : ""} onClick={() => onTab(tab)} key={tab}>{tab}</button>)}</nav><button type="button" className="detail-refresh"><img src={`${A}/refresh-detail.svg`} alt="刷新" /></button></header>{detailTab === "概览" ? <div className="detail-body"><h1>{selected.detail}</h1><article className="agent-card"><div className="agent-head"><strong>退款原因分析专家 / 羊毛党风控专家</strong><span className="agent-avatars"><img src={`${A}/expert-avatar-3.png`} alt="退款原因分析专家" /><img src={`${A}/expert-avatar-4.png`} alt="羊毛党风控专家" /></span><time>2026-07-15 18:06:22</time></div><p className="muted">您想鉴别图片真伪并查询图库，但我需要您提供图片URL才能执行。请上传或提供图片链接。</p><footer><button type="button">◷ 完结任务</button><button type="button">↻ 重新执行</button><button className="ai" type="button">AI鉴图</button></footer></article><div className="order-meta"><b>交易被平台关闭</b><span>退款完结</span><span className="user-meta"><img src={`${A}/customer.svg`} alt="" />1@#z1Fzk...</span><span>订单号: 6927941774...</span><span>任务创建时间: 2026-07-...</span><b>查看详情</b></div><div className="note">⚑ 2026-07-14 16:37:42 这是一段订单备注，这是一段订单备注</div><h3 className="task-detail-heading"><img src={`${A}/task-detail.svg`} alt="" />任务详情</h3><TaskDetail name="测试Agent" /><TaskDetail name="波比退款处理Agent" /></div> : <div className="empty-detail"><img src={`${A}/task-detail.svg`} alt="" /><strong>{detailTab}信息</strong><p>当前任务的{detailTab}内容已准备就绪。</p></div>}</section>;
+  const [pendingTickets, setPendingTickets] = useState(["941525", "941387", "941320", "941179", "941162", "940895"]);
+  const [openRecords, setOpenRecords] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    setPendingTickets(["941525", "941387", "941320", "941179", "941162", "940895"]);
+    setOpenRecords(new Set());
+  }, [selected.order]);
+  const expertRecords = [
+    { name: "朱迪测试3", updated: "2026-09-03 15:44:14", trigger: "工单编辑", steps: ["读取售后单与订单信息", "判断售后处理条件", "等待人工确认", "输出处理结论"], conclusion: selected.conclusion },
+    { name: "打款工单审核", updated: "2026-09-03 15:43:44", trigger: "手动触发", steps: ["读取打款工单上下文", "核对退款申请信息", "生成审核建议"], conclusion: "已完成打款工单信息核验，等待人工确认" },
+    { name: "朱迪测试2", updated: "2026-08-18 14:22:14", trigger: "工单编辑", steps: ["读取当前任务", "同步平台订单状态", "保存专家判断"], conclusion: "任务上下文已同步完成" },
+    { name: "「退货退款审核决策」专家", updated: "2026-08-18 11:14:49", trigger: "手动触发", steps: ["解析订单及会话数据", "核对退款申请信息", "输出结构化审核报告"], conclusion: "订单、凭证与会话信息已完成交叉核验" },
+    { name: "未知类型", updated: "2026-08-17 16:33:54", trigger: "手动触发", steps: ["读取任务输入", "等待关联工单", "结束当前处理链路"], conclusion: "当前专家记录已归档" },
+  ];
+  const toggleRecord = (index: number) => setOpenRecords((current) => {
+    const next = new Set(current);
+    if (next.has(index)) next.delete(index); else next.add(index);
+    return next;
+  });
+  const closeTicket = (ticket: string) => {
+    setPendingTickets((tickets) => tickets.filter((item) => item !== ticket));
+    onNotice(`工单 ${ticket} 已关闭`);
+  };
+  const copyOrder = () => {
+    if (navigator.clipboard) void navigator.clipboard.writeText(selected.order).catch(() => undefined);
+    onNotice("订单号已复制");
+  };
+  return <section className="task-v2-detail">
+    <header className="task-v2-detail-tabs"><nav>{tabs.map((tab) => <button type="button" className={detailTab === tab ? "on" : ""} onClick={() => onTab(tab)} key={tab}>{tab}</button>)}</nav><button type="button" aria-label="刷新详情" onClick={() => onNotice("任务详情已刷新")}><img src={`${A}/refresh-detail.svg`} alt="" /></button></header>
+    {detailTab === "概览" ? <div className="task-v2-detail-scroll"><div className="task-v2-detail-content task-v2-figma-detail"><h1>{selected.detail}</h1>
+      <article className="task-v2-task-card task-v2-primary-card">
+        <h2>{selected.expert}</h2>
+        <p className="task-v2-description">已准备跳转抖音售后详情页面，需人工确认后执行。</p>
+        <strong className="task-v2-card-label">售后信息：</strong>
+        <ul className="task-v2-bullet-list"><li>售后单号：147631274984062150</li><li>订单号：{selected.order}</li><li>商品：家用桌面收纳盒含化妆品杂物零食玩具整理置物储物筐</li><li>售后类型：发货前退款</li><li>售后状态：售后成功</li></ul>
+        <p className="task-v2-instruction">请点击「前往平台售后详情」按钮跳转售后台处理。</p>
+        <footer className="task-v2-task-actions"><button type="button" className="task-v2-button-primary" onClick={() => onNotice("已打开平台售后详情")}><span aria-hidden="true">↗</span>前往平台售后详情</button><button type="button" className="task-v2-button-secondary" onClick={() => onNotice("任务已标记为完成")}><span aria-hidden="true">✓</span>任务完成</button></footer>
+      </article>
+      <article className="task-v2-task-card task-v2-interrupted-card">
+        <h2>售后处理专家</h2>
+        <p className="task-v2-description">工单 941549 已被删除，无法更新。其余 6 个工单已停止执行，当前任务挂起。</p>
+        <section className="task-v2-interrupted-actions"><header><strong>待关闭工单</strong><span>{pendingTickets.length} 项</span></header><p>点击下列工单逐项执行关闭，全部处理后再完成当前任务。</p>{pendingTickets.length ? <div className="task-v2-ticket-grid">{pendingTickets.map((ticket) => <button type="button" className="task-v2-ticket-button" onClick={() => closeTicket(ticket)} key={ticket}><span aria-hidden="true">↗</span>关闭工单 {ticket}</button>)}</div> : <div className="task-v2-ticket-complete"><img src={`${A}/complete.svg`} alt="" />待关闭工单已全部处理</div>}<button type="button" className="task-v2-button-secondary task-v2-complete-button" onClick={() => onNotice(pendingTickets.length ? "请先关闭全部待关闭工单" : "任务已标记为完成")}><span aria-hidden="true">✓</span>任务完成</button></section>
+      </article>
+      <section className="task-v2-order-context"><div className="task-v2-order-line"><span>交易被平台关闭</span><b>退款完结</b><span>订单号：{selected.order}</span><button type="button" className="task-v2-copy-button" onClick={copyOrder} aria-label="复制订单号"><img src={`${A}/copy-detail.svg`} alt="" /></button><span>创建：2026-08-14 09:17:12</span><button type="button" className="task-v2-link" onClick={() => onNotice("已打开订单详情")}>查看详情</button></div><p><span aria-hidden="true">▧</span>1234覆盖备注：2026-09-03 15:43:04</p></section>
+      <section className="task-v2-records task-v2-figma-records"><header><img src={`${A}/task-detail.svg`} alt="" /><strong>任务详情</strong></header>{expertRecords.map((record, recordIndex) => { const isOpen = openRecords.has(recordIndex); return <article className={`task-v2-expert-record ${isOpen ? "open" : ""}`} key={record.name}><header><button type="button" onClick={() => toggleRecord(recordIndex)} aria-expanded={isOpen}><img src={`${A}/expand.svg`} alt="" /><strong>{record.name}</strong><span>更新于 {record.updated}</span></button><button type="button" onClick={() => onNotice(`已打开${record.name}的关联工单`)}>关联工单</button></header>{isOpen && <div className="task-v2-record-body"><div><b>处理记录</b><button type="button" onClick={() => onNotice("已打开过程回放")}>⌁　过程回放</button></div><section><header><span>{record.trigger}</span><b>最新</b><time>{record.updated}</time></header>{record.steps.map((step, index) => <p key={step}><i>{index + 1}</i>{step}<time>0.{index + 1}{index + 2}s</time><img src={`${A}/expand.svg`} alt="" /></p>)}</section><footer><strong>✓　结论</strong><p>{record.conclusion}。任务处理记录已保存，可继续关联工单或查看完整过程。</p></footer></div>}</article>; })}</section>
+    </div></div> : <div className="task-v2-placeholder"><img src={`${A}/task-detail.svg`} alt="" /><strong>{detailTab}信息</strong><p>当前任务的{detailTab}内容已准备就绪。</p></div>}
+  </section>;
 }
 
-function TaskDetail({ name }: { name: string }) { return <button type="button" className="sub-task"><b>{name}</b><span>更新时间: 2026-07-28 10:02:38</span><em>关联工单 <img src={`${A}/chevron.svg`} alt="" /></em></button>; }
+function LegacyTaskDetailPanel({ detailTab, onTab, selected, onNotice }: { detailTab: string; onTab: (tab: string) => void; selected: typeof taskData[number]; onNotice: (message: string) => void }) {
+  const tabs = ["概览", "工单", "订单", "物流", "会话"];
+  const [openRecords, setOpenRecords] = useState<Set<number>>(new Set([0]));
+  useEffect(() => setOpenRecords(new Set([0])), [selected.order]);
+  const canShowEvidence = selected.expert.includes("图片") || selected.detail.includes("包裹");
+  const expertRecords = [
+    { name: selected.expert, updated: "2026-09-03 15:44:14", steps: ["读取任务上下文", "执行专家判断", "输出处理结论"], conclusion: selected.conclusion },
+    { name: "「工单创建与跟进」专家", updated: "2026-09-03 15:42:08", steps: ["读取处理方案", "调用工具创建工单", "更新工单截止时间", "保存关联结果"], conclusion: `已根据“${selected.title}”创建跟进工单，并同步任务处理状态` },
+    { name: "「退货退款审核决策」专家", updated: "2026-09-03 15:39:26", steps: ["解析订单及会话数据", "核对退款申请信息", "输出结构化审核报告"], conclusion: "订单、凭证与会话信息已完成交叉核验，审核依据已归档" },
+  ];
+  const toggleRecord = (index: number) => setOpenRecords((current) => {
+    const next = new Set(current);
+    if (next.has(index)) next.delete(index); else next.add(index);
+    return next;
+  });
+  return <section className="task-v2-detail">
+    <header className="task-v2-detail-tabs"><nav>{tabs.map((tab) => <button type="button" className={detailTab === tab ? "on" : ""} onClick={() => onTab(tab)} key={tab}>{tab}</button>)}</nav><button type="button" aria-label="刷新详情" onClick={() => onNotice("任务详情已刷新")}><img src={`${A}/refresh-detail.svg`} alt="" /></button></header>
+    {detailTab === "概览" ? <div className="task-v2-detail-scroll"><div className="task-v2-detail-content"><h1>{selected.detail}</h1><article className="task-v2-result-card"><header><span><i />{selected.expert}</span><time>2026-09-03 15:44:14</time></header><h2>{selected.criterion}</h2><p className="task-v2-result-request">识别需求：{selected.summary}，并给出可追溯的判断依据。</p><div className={`task-v2-evidence ${canShowEvidence ? "with-evidence" : ""}`}><div className="task-v2-evidence-preview"><div><span>图片凭证</span></div>{canShowEvidence && <div><span>参考图片</span></div>}<small>{canShowEvidence ? "买家上传的凭证图片 · 2 张" : "任务上下文数据 · 已同步"}</small></div><div className="task-v2-evidence-copy"><strong>{selected.conclusion}</strong><p>置信度　{selected.confidence}</p><b>判断依据</b><ol>{selected.evidence.map((item) => <li key={item}>{item}</li>)}</ol></div></div><div className="task-v2-conclusion">结论：{selected.conclusion}，建议根据当前结果继续执行后续处理流程。</div><footer><button type="button" onClick={() => onNotice("已打开平台售后详情")}>↗　前往平台售后详情</button><button type="button" onClick={() => onNotice("任务已标记为完成")}>✓　标记任务完成</button></footer></article><section className="task-v2-context"><div><span>{selected.status === "已完成" ? "任务执行完成" : "图片识别完成"}</span><b>{selected.status}</b><span>订单号：{selected.order}</span><button type="button" onClick={() => onNotice("订单号已复制")} aria-label="复制订单号"><img src={`${A}/copy.svg`} alt="" /></button><span>创建：2026-08-14 09:17:12</span><button type="button" className="task-v2-link" onClick={() => onNotice("已打开任务详情")}>查看详情</button></div><p>▧　{selected.summary}</p></section><section className="task-v2-records"><header><img src={`${A}/task-detail.svg`} alt="" /><strong>任务详情</strong><span>{expertRecords.length} 个专家记录</span></header>{expertRecords.map((record, recordIndex) => { const isOpen = openRecords.has(recordIndex); return <article className={`task-v2-expert-record ${isOpen ? "open" : ""}`} key={record.name}><header><button type="button" onClick={() => toggleRecord(recordIndex)} aria-expanded={isOpen}><i>›</i><strong>{record.name}</strong><span>更新于 {record.updated}</span></button><button type="button" onClick={() => onNotice("已打开关联工单")}>关联工单</button></header>{isOpen && <div className="task-v2-record-body"><div><b>处理记录</b><button type="button" onClick={() => onNotice("已打开过程回放")}>⌁　过程回放</button></div><section><header><span>{selected.mode === "人工" ? "手动触发" : "自动触发"}</span><b>最新</b><time>{record.updated}</time></header>{record.steps.map((step, index) => <p key={step}><i>{index + 1}</i>{step}<time>0.{index + 1}{index + 2}s</time></p>)}</section><footer><strong>✓　结论</strong><p>{record.conclusion}。任务处理记录已保存，可继续关联工单或查看完整过程。</p></footer></div>}</article>; })}</section></div></div> : <div className="task-v2-placeholder"><img src={`${A}/task-detail.svg`} alt="" /><strong>{detailTab}信息</strong><p>当前任务的{detailTab}内容已准备就绪。</p></div>}
+  </section>;
+}
