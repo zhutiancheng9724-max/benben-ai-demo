@@ -582,6 +582,105 @@
   .chat-v3-automation-form-row { grid-template-columns: 1fr 1fr; }
   .chat-v3-automation-dialog { padding: 22px 18px 18px; border-radius: 16px; }
 }
+
+/* Figma 2931:5872：设置页保持 Task 的 60px 顶栏与浅灰工作台。 */
+.settings-center { display: flex; min-height: 100vh; padding-left: 60px; background: #f1f2f3; color: #20232d; }
+.settings-center-surface { display: flex; width: calc(100% - 60px); min-height: 100vh; flex-direction: column; }
+.settings-center .side-rail { position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; background: #292b34; }
+.settings-center-topbar { display: flex; height: 60px; flex: none; align-items: center; gap: 8px; padding: 12px 16px; background: #f1f2f3; }
+.settings-center-topbar .settings-back { width: 72px; height: 36px; padding: 0 8px; border-radius: 8px; color: #202020; font-size: 14px; }
+.settings-center-topbar .settings-back:hover, .settings-center-topbar-settings:hover { background: #e9eaec; }
+.settings-center-topbar > strong { width: 224px; font-size: 20px; font-weight: 500; line-height: 34px; }
+.settings-center-topbar-spacer { min-width: 0; flex: 1; }
+.settings-center-topbar > a, .settings-center-topbar-settings { display: flex; height: 36px; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; color: #20232d; font-size: 13px; white-space: nowrap; }
+.settings-center-topbar > a { width: 162px; }
+.settings-center-topbar > a:hover { background: #e9eaec; }
+.settings-center-topbar-settings { width: 80px; margin: 0; background: transparent; font-size: 14px; }
+.settings-center-topbar-settings img { width: 16px; height: 16px; opacity: .75; }
+.settings-center-body { display: grid; min-height: calc(100vh - 60px); grid-template-columns: 256px minmax(0, 1fr); }
+.settings-center-nav { position: static; z-index: auto; width: auto; min-width: 0; padding: 20px 16px 32px; overflow-y: auto; border: 0; background: #f1f2f3; }
+.settings-center-nav nav { display: grid; gap: 4px; }
+.settings-center-nav .settings-chat-entry { width: 100%; height: 36px; padding: 0 16px; border-radius: 8px; background: #eaebed; color: #20232d; font-size: 14px; font-weight: 500; text-align: left; }
+.settings-center-nav .settings-chat-entry:hover { background: #e3e5e8; }
+.settings-center-nav section { display: grid; gap: 0; margin-top: 4px; }
+.settings-center-nav section > header { height: 36px; gap: 8px; padding: 0 16px; color: #858585; font-size: 14px; font-weight: 500; }
+.settings-center-nav section > header span { width: 16px; height: 16px; color: #858585; font-size: 13px; }
+.settings-center-nav section > header i { color: #858585; font-size: 12px; }
+.settings-center-nav section > button { width: 100%; height: 36px; padding: 0 16px; border-radius: 8px; background: transparent; color: #20232d; font-size: 14px; text-align: left; }
+.settings-center-nav section > button:hover { background: #eaebed; }
+.settings-center-nav section > button.on { background: #eaebed; color: #20232d; font-weight: 500; }
+.settings-center-workspace { min-width: 0; min-height: calc(100vh - 60px); margin: 0; padding: 4px; overflow: hidden; background: #f1f2f3; }
+.settings-center-workspace > .settings-page-heading { padding: 30px 36px 0; }
+.settings-center-workspace > .settings-toolbar, .settings-center-workspace > .setting-table, .settings-center-workspace > .settings-analysis, .settings-center-workspace > .settings-config-list, .settings-center-workspace > .settings-tuning, .settings-center-workspace > .setting-filter-grid { margin-right: 30px; margin-left: 30px; }
+.chat-settings-card { min-height: calc(100vh - 68px); padding: 36px 40px 28px; overflow-y: auto; border-radius: 16px; background: #fff; }
+.chat-settings-card h1 { margin: 0; color: #202020; font-size: 26px; font-weight: 500; line-height: 40px; }
+.chat-settings-intro { margin: 12px 0 0; color: #626262; font-size: 14px; line-height: 22px; }
+.chat-settings-section { margin-top: 20px; }
+.chat-settings-section h2 { margin: 0 0 12px; color: #202020; font-size: 15px; font-weight: 500; line-height: 22px; }
+.chat-settings-themes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.chat-settings-theme { position: relative; min-width: 0; height: 92px; padding: 10px; border-radius: 12px; background: #f5f5f5; color: #202020; text-align: left; }
+.chat-settings-theme:hover, .chat-settings-theme.on { background: #ededed; }
+.chat-settings-theme-preview { display: flex; height: 52px; flex-direction: column; gap: 7px; justify-content: center; padding: 0 16px; border-radius: 8px; background: #fff; }
+.chat-settings-theme-preview i { display: block; width: 64%; height: 6px; border-radius: 5px; background: #e1e3e6; }
+.chat-settings-theme-preview i + i { width: 44%; }
+.chat-settings-theme-preview.theme-dark { background: #181818; }
+.chat-settings-theme-preview.theme-dark i { background: #535353; }
+.chat-settings-theme-preview.theme-glass { background: #272646; }
+.chat-settings-theme-preview.theme-glass i { background: #6e6b9e; }
+.chat-settings-theme-preview.theme-clear { background: linear-gradient(120deg, #fbf7ff, #eee7ff); }
+.chat-settings-theme-preview.theme-clear i { background: #fff; }
+.chat-settings-theme strong { display: block; margin-top: 6px; font-size: 12px; font-weight: 500; }
+.chat-settings-theme > b { position: absolute; right: 12px; bottom: 10px; color: #202020; font-size: 12px; font-weight: 500; }
+.chat-settings-binding { margin-top: 20px; }
+.chat-settings-label { margin: 0 0 8px; color: #858585; font-size: 12px; }
+.chat-settings-binding > select, .chat-settings-wide-field input { width: 100%; height: 36px; padding: 0 12px; border: 0; border-radius: 8px; outline: 0; background: #f1f2f3; color: #626262; font: inherit; font-size: 12px; }
+.chat-settings-channel-tabs { display: flex; gap: 8px; margin-top: 8px; }
+.chat-settings-channel-tabs button { width: 72px; height: 28px; border-radius: 7px; background: #e9eaec; color: #626262; font-size: 12px; }
+.chat-settings-channel-tabs button.on { background: #202020; color: #fff; }
+.chat-settings-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 12px; }
+.chat-settings-fields label, .chat-settings-wide-field { display: grid; gap: 7px; color: #858585; font-size: 12px; }
+.chat-settings-fields input { width: 100%; height: 36px; padding: 0 12px; border: 0; border-radius: 8px; outline: 0; background: #f1f2f3; color: #202020; font: inherit; font-size: 12px; }
+.chat-settings-wide-field { margin-top: 12px; }
+.chat-settings-submit { height: 36px; margin-top: 12px; padding: 0 18px; border-radius: 8px; background: #202020; color: #fff; font-size: 12px; }
+
+/* Figma 2924:3398：Task 顶栏、任务列表与右侧详情的尺寸基线。 */
+.task-home-v2 .task-v2-topbar { height: 60px; padding: 12px 16px; }
+.task-home-v2 .task-v2-product-wrap { flex: 0 0 244px; }
+.task-home-v2 .task-v2-product { width: 244px; height: 40px; margin: 0; padding: 0; border-radius: 8px; background: transparent; font-size: 17px; font-weight: 500; }
+.task-home-v2 .task-v2-product:hover, .task-home-v2 .task-v2-product.open { background: transparent; }
+.task-home-v2 .task-v2-search-wrap { flex: 0 0 540px; height: 40px; }
+.task-home-v2 .task-v2-search { height: 36px; border-radius: 12px; background: #eceded; }
+.task-home-v2 .task-v2-manual-trigger { width: 96px; height: 36px; margin-left: 12px; border: 0; border-radius: 8px; background: #eceded; }
+.task-home-v2 .task-v2-workspace { top: 60px; }
+.task-home-v2 .task-v2-list-header { height: 100px; padding: 12px 8px 0; }
+.task-home-v2 .task-v2-scope { padding-left: 8px; }
+.task-home-v2 .task-v2-scope nav { width: 164px; height: 36px; gap: 0; padding: 2px; border-radius: 18px; background: #eceded; }
+.task-home-v2 .task-v2-scope nav button { width: 80px; height: 32px; padding: 0; border-radius: 17px; }
+.task-home-v2 .task-v2-scope nav button.on { background: #fff; box-shadow: none; }
+.task-home-v2 .task-v2-risk-filters button:first-child.on { background: #fff; }
+.task-home-v2 .task-v2-row.active { border-color: #e0e3eb; background: #eceded; }
+.task-home-v2 .task-v2-detail { border-radius: 0; background: #f1f2f3; }
+.task-home-v2 .task-v2-detail-tabs { height: 56px; padding: 0 32px; border-bottom: 1px solid #e8e8e8; border-radius: 0; background: #f1f2f3; }
+.task-home-v2 .task-v2-detail-scroll { height: calc(100vh - 116px); background: #f1f2f3; }
+.task-home-v2 .task-v2-detail-content { margin-top: 28px; }
+
+@media (max-width: 900px) {
+  .settings-center { padding-left: 0; }
+  .settings-center .side-rail { display: none; }
+  .settings-center-surface { width: 100%; }
+  .settings-center-body { grid-template-columns: 220px minmax(0, 1fr); }
+  .settings-center-topbar > strong { width: auto; }
+  .settings-center-topbar > a { display: none; }
+  .chat-settings-card { padding: 28px 24px; }
+}
+@media (max-width: 640px) {
+  .settings-center-body { display: block; }
+  .settings-center-nav { padding: 12px; }
+  .settings-center-workspace { min-height: auto; }
+  .chat-settings-card { min-height: calc(100vh - 160px); }
+  .chat-settings-themes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chat-settings-fields { grid-template-columns: 1fr; }
+}
 @media (max-width: 560px) {
   .chat-v3-automation-form-grid, .chat-v3-automation-form-row, .chat-v3-automation-schedule-grid, .chat-v3-automation-channel-grid { grid-template-columns: 1fr; }
   .chat-v3-weekday-picker.full { grid-column: auto; }
@@ -1245,4 +1344,376 @@
   .chat-home-v3 .chat-v3-composer, .chat-v3-more-content { width: calc(100% - 32px); }
   .chat-home-v3 .chat-v3-settings-page { left: 60px; }
   .chat-v3-more-content > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+/* Figma 2924:3398：同步 Task 顶栏、任务列表与左下角入口的最终基线。 */
+.task-home-v2 .task-v2-topbar {
+  height: 60px;
+  padding: 12px 16px;
+  border: 0;
+  background: #f1f2f3;
+}
+.task-home-v2 .task-v2-product-wrap { flex: 0 0 244px; }
+.task-home-v2 .task-v2-product {
+  width: 244px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 17px;
+  font-weight: 500;
+}
+.task-home-v2 .task-v2-search-wrap { flex: 0 0 540px; height: 40px; }
+.task-home-v2 .task-v2-search { height: 36px; border-radius: 12px; background: #eceded; }
+.task-home-v2 .task-v2-advanced-button { display: none; }
+.task-home-v2 .task-v2-manual-trigger {
+  width: 96px;
+  height: 36px;
+  margin-left: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #eceded;
+  font-size: 13px;
+}
+.task-home-v2 .task-v2-workspace { top: 60px; background: #f1f2f3; }
+.task-home-v2 .task-v2-list { border-right: 0; background: #f1f2f3; }
+.task-home-v2 .task-v2-row.active { border: 1px solid #e0e3eb; background: #eceded; }
+.task-home-v2 .task-v2-list-footer {
+  display: flex;
+  min-height: 132px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0 12px;
+  border: 0;
+  box-sizing: border-box;
+  background: #f1f2f3;
+}
+.task-home-v2 .task-v2-list-footer > button {
+  display: flex;
+  width: calc(100% - 24px);
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin: 0 12px;
+  padding: 4px;
+  border-radius: 8px;
+  background: transparent;
+  color: #404040;
+  font-size: 12px;
+}
+.task-home-v2 .task-v2-list-footer > button > span { width: 16px; height: 16px; color: #404040; font-size: 16px; line-height: 16px; }
+.task-home-v2 .task-v2-list-footer > button > em { font-style: normal; line-height: 20px; }
+.task-home-v2 .task-v2-list-footer > button > b { margin-left: auto; color: #858585; font-size: 12px; font-weight: 500; line-height: 20px; }
+.task-home-v2 .task-v2-list-footer > button > i { width: 12px; height: 12px; margin: 0; color: #858585; font-size: 16px; font-style: normal; line-height: 12px; }
+.task-home-v2 .task-v2-list-footer > button:hover { background: #eceeef; color: #202020; }
+.task-home-v2 .task-v2-list-footer > div {
+  display: flex;
+  width: 100%;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 12px 0;
+  border-top: 1px solid #e0e0e0;
+  box-sizing: border-box;
+}
+.task-home-v2 .task-v2-list-footer > div button {
+  display: flex;
+  width: 100%;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 0 4px;
+  border-radius: 8px;
+  background: transparent;
+  color: #202020;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.task-home-v2 .task-v2-list-footer > div button > span { width: 16px; height: 16px; color: #626262; font-size: 16px; line-height: 16px; }
+.task-home-v2 .task-v2-list-footer > div button > em { font-style: normal; line-height: 20px; }
+.task-home-v2 .task-v2-list-footer > div button:hover { background: #eceeef; }
+
+/* Task / Chat 产品切换与右侧内容面板的统一定位、颜色基线。 */
+.task-home-v2 .task-v2-topbar,
+.chat-home-v3 .chat-v3-topbar {
+  height: 60px;
+  padding: 12px 16px;
+  background: #f1f2f3;
+}
+.task-home-v2 .task-v2-product-wrap,
+.chat-home-v3 .chat-v3-product-wrap { flex: 0 0 244px; }
+.task-home-v2 .task-v2-product,
+.chat-home-v3 .chat-v3-product {
+  width: 244px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 17px;
+  font-weight: 500;
+}
+.task-home-v2 .task-v2-product:hover,
+.task-home-v2 .task-v2-product.open,
+.chat-home-v3 .chat-v3-product:hover,
+.chat-home-v3 .chat-v3-product.open { background: transparent; }
+.task-home-v2 .task-v2-product-wrap .product-menu,
+.chat-home-v3 .chat-v3-product-wrap .product-menu { top: 48px; left: 0; }
+
+/* Figma 参考中的右侧圆角内容区：Tab 栏为 #FAFAFA，下方内容为白色。 */
+.task-home-v2 .task-v2-detail { background: #fff; }
+.task-home-v2 .task-v2-detail-tabs { background: #fafafa; }
+.task-home-v2 .task-v2-detail-scroll { background: #fff; }
+.chat-home-v3 .chat-v3-main { background: #fff; }
+.chat-home-v3 .chat-v3-thread > header { background: #fafafa; }
+
+/* Figma 2924:3398：Task 顶栏的搜索与智能触发入口。 */
+.task-home-v2 .task-v2-search {
+  gap: 10px;
+  padding: 0 12px;
+  background: #eceded;
+}
+.task-home-v2 .task-v2-search img { margin: 0; opacity: 1; }
+.task-home-v2 .task-v2-search input { font-size: 14px; }
+.chat-home-v3 .chat-v3-search-wrap {
+  position: relative;
+  flex: 0 0 540px;
+  width: 540px;
+  height: 40px;
+}
+.chat-home-v3 .chat-v3-search {
+  display: flex;
+  width: 100%;
+  height: 36px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #eceded;
+}
+.chat-home-v3 .chat-v3-search img { width: 18px; height: 18px; margin: 0; opacity: 1; }
+.chat-home-v3 .chat-v3-search input {
+  min-width: 0;
+  flex: 1;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #202020;
+  font: inherit;
+  font-size: 14px;
+}
+.chat-home-v3 .chat-v3-search input::placeholder { color: #858585; }
+.task-home-v2 .task-v2-trigger-wrap {
+  display: flex;
+  height: 36px;
+  align-items: flex-start;
+  padding-left: 12px;
+}
+.task-home-v2 .task-v2-manual-trigger {
+  display: flex;
+  width: 96px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #eceded;
+  color: #242424;
+  font-size: 13px;
+  font-weight: 500;
+}
+.task-home-v2 .task-v2-manual-trigger img { width: 14px; height: 14px; flex: none; }
+
+/* Chat / Task 搜索统一为顶部入口 + 居中弹窗，保留各自的搜索内容。 */
+.chat-v3-search-layer {
+  animation: benben-search-layer-in .16s ease-out both;
+}
+.chat-v3-search-layer .chat-v3-search-modal {
+  height: min(560px, calc(100vh - 40px));
+  min-height: 0;
+  animation: benben-search-modal-in .18s ease-out both;
+}
+.task-v2-search-modal {
+  background: #fff;
+  color: #20232d;
+  box-shadow: 0 20px 48px #11182738;
+}
+.task-v2-search-modal > header { border-bottom-color: #e8ebef; }
+.task-v2-search-modal > header input { color: #20232d; }
+.task-v2-search-modal > header button { color: #8993a1; }
+.task-v2-search-modal-body {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  padding: 18px 20px 24px !important;
+}
+.task-v2-search-modal-toolbar {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.task-v2-search-modal-toolbar strong { color: #20232d; font-size: 14px; font-weight: 600; }
+.task-v2-search-modal-toolbar button {
+  display: flex;
+  height: 30px;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #f3f5f7;
+  color: #626b78;
+  font-size: 12px;
+}
+.task-v2-search-modal-toolbar button:hover,
+.task-v2-search-modal-toolbar button.on { background: #eceded; color: #202020; }
+.task-v2-search-modal-toolbar button i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e65c4c;
+}
+.task-v2-search-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f7f7f7;
+}
+.task-v2-search-filters label { display: grid; gap: 7px; color: #858585; font-size: 12px; }
+.task-v2-search-filters select {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #dedfe2;
+  border-radius: 7px;
+  outline: 0;
+  background: #fff;
+  color: #202020;
+  font: inherit;
+  font-size: 13px;
+}
+.task-v2-search-filters footer { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 8px; margin-top: 2px; }
+.task-v2-search-filters footer button { height: 32px; padding: 0 13px; border-radius: 8px; background: #f3f4f5; color: #52575f; font-size: 12px; }
+.task-v2-search-filters footer button:last-child { background: #202020; color: #fff; }
+.task-v2-search-results { display: grid; gap: 6px; }
+.task-v2-search-results > button {
+  display: grid !important;
+  height: auto !important;
+  min-height: 68px;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 5px 8px !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #20232d !important;
+}
+.task-v2-search-results > button:hover { background: #f3f5f7 !important; }
+.task-v2-search-results > button > span { color: #697482; font-size: 12px; white-space: nowrap; }
+.task-v2-search-results > button > span.high { color: #b85b5b; }
+.task-v2-search-results > button > span.medium { color: #b27b35; }
+.task-v2-search-results > button > span.low { color: #4b9477; }
+.task-v2-search-results > button > strong { min-width: 0; overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.task-v2-search-results > button > time { color: #8993a1; font-size: 12px; }
+.task-v2-search-results > button > p { grid-column: 1 / -1; margin: 0; overflow: hidden; color: #8993a1; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.task-v2-search-empty { margin: 120px 0 !important; color: #8993a1; font-size: 13px; text-align: center; }
+@keyframes benben-search-layer-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes benben-search-modal-in { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Figma 2924:3632 最新版：底部入口采用 12px 外边距、8px 间距和 32px 行高。 */
+.task-home-v2 .task-v2-product,
+.chat-home-v3 .chat-v3-product { padding-left: 8px; }
+.task-home-v2 .task-v2-list-footer {
+  min-height: 145px;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+}
+.task-home-v2 .task-v2-list-footer > button:first-child {
+  width: 336px;
+  height: 32px;
+  margin: 0;
+  padding: 4px;
+}
+.task-home-v2 .task-v2-list-footer > div.task-v2-list-divider {
+  display: block;
+  width: 336px;
+  height: 1px;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #e0e0e0;
+}
+.task-home-v2 .task-v2-list-footer > button.task-v2-list-entry {
+  width: 336px;
+  height: 32px;
+  flex: none;
+  margin: 0;
+  padding: 0 10px 0 4px;
+  border-radius: 8px;
+}
+
+/* 专家 / 技能 / 连接器共用 Figma 2948:8224 的顶部栏颜色。 */
+.expert-hub-head { border-bottom-color: #e8e8e8; background: #f7f7f7; }
+.expert-hub-body,
+.library-page { background: #f7f7f7; }
+
+/* Chat 顶部与左侧入口：定时任务沿用新建对话，右上角入口使用同一组文字与 hover 样式。 */
+.chat-home-v3 .chat-v3-sidebar-actions > button:first-child,
+.chat-home-v3 .chat-v3-sidebar-actions > button.chat-v3-automation-entry {
+  color: #20232d !important;
+}
+.chat-home-v3 .chat-v3-sidebar-actions > button:first-child .chat-ui-icon,
+.chat-home-v3 .chat-v3-sidebar-actions > button.chat-v3-automation-entry .chat-ui-icon {
+  color: #20232d !important;
+  stroke: currentColor;
+}
+.chat-home-v3 .chat-v3-sidebar-actions > button.chat-v3-automation-entry > span {
+  color: #20232d !important;
+}
+.chat-home-v3 .chat-v3-sidebar-actions > button.chat-v3-automation-entry.active {
+  color: #20232d !important;
+}
+.chat-home-v3 .chat-v3-hub-link,
+.chat-home-v3 .chat-v3-settings {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: transparent;
+  color: #20232d;
+  font-size: 14px;
+  font-weight: 500;
+}
+.chat-home-v3 .chat-v3-hub-link {
+  margin-left: auto;
+  padding: 0 12px;
+}
+.chat-home-v3 .chat-v3-settings {
+  width: auto;
+  margin: 0;
+  padding: 0 12px;
+}
+.chat-home-v3 .chat-v3-hub-link:hover,
+.chat-home-v3 .chat-v3-settings:hover {
+  background: #e9eaec;
+}
+.chat-home-v3 .chat-v3-hub-link span {
+  color: #626262;
+  font-size: 20px;
+  line-height: 1;
 }

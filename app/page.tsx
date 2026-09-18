@@ -77,14 +77,13 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
   const [taskScope, setTaskScope] = useState<"pending" | "all">("pending");
   const [risk, setRisk] = useState<"all" | TaskRisk>("all");
   const [search, setSearch] = useState("");
+  const [taskSearchOpen, setTaskSearchOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const defaultAdvanced = { mode: "全部", store: "全部店铺", status: "全部状态" } as const;
   const [advanced, setAdvanced] = useState<{ mode: "全部" | TaskMode; store: string; status: string }>(defaultAdvanced);
   const [draftAdvanced, setDraftAdvanced] = useState(advanced);
-  const advancedRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
   const shownTasks = useMemo(() => taskData.filter((task) => {
     const searchMatch = !search.trim() || [task.title, task.order, task.store, task.expert].some((value) => value.includes(search.trim()));
     const scopeMatch = taskScope === "all" || task.pending;
@@ -97,14 +96,10 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
   const selected = taskData[activeTask];
   const riskCounts: Record<TaskRisk, number> = { high: 12, medium: 24, low: 56, other: 36 };
 
-  const openAdvanced = () => {
-    setManualOpen(false);
-    setDraftAdvanced(advanced);
-    setAdvancedOpen((open) => !open);
-  };
   const resetAdvanced = () => setDraftAdvanced(defaultAdvanced);
   const applyAdvanced = () => { setAdvanced(draftAdvanced); setAdvancedOpen(false); };
   const hasAdvancedFilter = advanced.mode !== "全部" || advanced.store !== "全部店铺" || advanced.status !== "全部状态";
+  const openTaskSearch = () => { setManualOpen(false); setDraftAdvanced(advanced); setTaskSearchOpen(true); };
   const announce = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(""), 2200); };
 
   useEffect(() => {
@@ -112,12 +107,12 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (isMenuOpen && !target.closest(".task-v2-product-wrap")) setIsMenuOpen(false);
-      if (advancedOpen && !target.closest(".task-v2-search-wrap")) setAdvancedOpen(false);
+      if (taskSearchOpen && !target.closest(".task-v2-search-modal")) setTaskSearchOpen(false);
       if (manualOpen && !target.closest(".task-v2-trigger-wrap")) setManualOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      setIsMenuOpen(false); setAdvancedOpen(false); setManualOpen(false);
+      setIsMenuOpen(false); setTaskSearchOpen(false); setAdvancedOpen(false); setManualOpen(false);
     };
     document.addEventListener("mousedown", closeFloatingPanels);
     document.addEventListener("keydown", closeOnEscape);
@@ -138,18 +133,10 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
     </aside>
     <header className="task-v2-topbar">
       <div className="task-v2-product-wrap"><button className={`task-v2-product ${isMenuOpen ? "open" : ""}`} type="button" onClick={() => setIsMenuOpen((open) => !open)}>犇犇Task <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="task" />}</div>
-      <div ref={searchRef} className="task-v2-search-wrap">
-        <label className="task-v2-search"><img src={`${A}/search-top.svg`} alt="" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索任务、订单号或买家 ID" /></label>
-        <button type="button" className={`task-v2-advanced-button ${hasAdvancedFilter ? "filtered" : ""}`} onClick={openAdvanced}><span aria-hidden="true">⌘</span>高级筛选{hasAdvancedFilter && <i />}</button>
-        {advancedOpen && <div ref={advancedRef} className="task-v2-advanced-popover" role="dialog" aria-label="高级筛选">
-          <header><strong>高级筛选</strong><button type="button" onClick={() => setAdvancedOpen(false)} aria-label="关闭">×</button></header>
-          <label>处理方式<select value={draftAdvanced.mode} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, mode: event.target.value as "全部" | TaskMode })}><option>全部</option><option>人工</option><option>犇犇</option></select></label>
-          <label>关联店铺<select value={draftAdvanced.store} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, store: event.target.value })}><option>全部店铺</option><option>班牛数码专营店</option><option>班牛官方旗舰店</option><option>天马数码专营店</option></select></label>
-          <label>任务状态<select value={draftAdvanced.status} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, status: event.target.value })}><option>全部状态</option><option>待确认</option><option>待处理</option><option>处理中</option><option>已完成</option></select></label>
-          <footer><button type="button" onClick={resetAdvanced}>重置</button><button type="button" onClick={applyAdvanced}>应用筛选</button></footer>
-        </div>}
+      <div className="task-v2-search-wrap">
+        <label className="task-v2-search"><img src={`${A}/search-top.svg`} alt="" /><input readOnly value={search} onClick={openTaskSearch} onFocus={openTaskSearch} placeholder="搜索" /></label>
       </div>
-      <div className="task-v2-trigger-wrap"><button type="button" className="task-v2-manual-trigger" onClick={() => { setAdvancedOpen(false); setManualOpen((open) => !open); }}>手动触发</button>{manualOpen && <div className="task-v2-trigger-popover"><strong>手动触发任务</strong><p>选择专家后可立即创建一条待处理任务。</p><button type="button" onClick={() => { setManualOpen(false); announce("已创建一条待处理任务"); }}>创建任务</button></div>}</div>
+      <div className="task-v2-trigger-wrap"><button type="button" className="task-v2-manual-trigger" onClick={() => { setAdvancedOpen(false); setManualOpen((open) => !open); }}><img src={`${A}/smart-trigger.svg`} alt="" />智能触发</button>{manualOpen && <div className="task-v2-trigger-popover"><strong>智能触发任务</strong><p>选择专家后可立即创建一条待处理任务。</p><button type="button" onClick={() => { setManualOpen(false); announce("已创建一条待处理任务"); }}>创建任务</button></div>}</div>
       <a className="task-v2-management" href="/?design=1404-1493&expert=1&from=task" onClick={() => { window.sessionStorage.setItem("benben-expert-return-task", `${window.location.pathname}${window.location.search}`); window.sessionStorage.setItem("benben-expert-source", "task"); }}><span>✧</span>专家·技能·连接器</a>
       <button className="task-v2-settings" type="button" onClick={() => { window.sessionStorage.setItem("benben-settings-return-task", `${window.location.pathname}${window.location.search}`); window.location.assign("/?design=1404-1493&settings=1&from=task"); }}><img src={`${A}/settings-16.svg`} alt="" />设置</button>
     </header>
@@ -159,17 +146,31 @@ function TaskHome({ menuOpen }: { menuOpen: boolean }) {
         <div className="task-v2-task-scroll">{shownTasks.length ? shownTasks.map((task) => { const index = taskData.indexOf(task); return <button type="button" onClick={() => { setActiveTask(index); setDetailTab("概览"); }} className={`task-v2-row ${activeTask === index ? "active" : ""}`} key={task.order}>
           <span className="task-v2-row-top"><i className={task.risk} /> <em>{({ high: "高风险", medium: "中风险", low: "低风险", other: "其他" } as Record<TaskRisk, string>)[task.risk]}</em><strong>{task.title}</strong><time>{task.time}</time></span><p>{task.summary}</p><span className="task-v2-store"><span>♜</span>{task.store}<b className={task.mode === "人工" ? "manual" : "benben"}>{task.mode}</b></span><small>订单号 {task.order}<span className="task-v2-copy" role="button" tabIndex={0} aria-label="复制订单号" onClick={(event) => { event.stopPropagation(); announce("订单号已复制"); }} onKeyDown={(event) => { if (event.key === "Enter") announce("订单号已复制"); }}><img src={`${A}/copy.svg`} alt="" /></span></small>
         </button>; }) : <div className="task-v2-empty"><strong>暂无匹配任务</strong><span>试试调整筛选条件</span></div>}</div>
-        <footer className="task-v2-list-footer"><button type="button" onClick={() => announce("已打开未匹配任务记录")}><span>♧</span>未匹配任务记录 <b>46</b><i>›</i></button><div><button type="button">⌁　评估中心</button><button type="button">◷　效能中心</button></div></footer>
+        <footer className="task-v2-list-footer"><button type="button" onClick={() => announce("已打开未匹配任务记录")}><span>♧</span><em>未匹配任务记录</em><b>46</b><i>›</i></button><div className="task-v2-list-divider" /><button className="task-v2-list-entry" type="button"><span>⌁</span><em>评估中心</em></button><button className="task-v2-list-entry" type="button"><span>◷</span><em>效能中心</em></button></footer>
       </aside>
       <TaskDetailPanel detailTab={detailTab} onTab={setDetailTab} selected={selected} onNotice={announce} />
     </section>
+    {taskSearchOpen && <div className="chat-v3-modal-layer chat-v3-search-layer" onMouseDown={() => setTaskSearchOpen(false)}><section className="chat-v3-search-modal task-v2-search-modal" role="dialog" aria-label="搜索任务" onMouseDown={(event) => event.stopPropagation()}>
+      <header><img src={`${A}/search-top.svg`} alt="" /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索任务、订单号或买家 ID" /><button type="button" onClick={() => setTaskSearchOpen(false)} aria-label="关闭">×</button></header>
+      <div className="task-v2-search-modal-body">
+        <div className="task-v2-search-modal-toolbar"><strong>任务搜索</strong><button type="button" className={advancedOpen || hasAdvancedFilter ? "on" : ""} onClick={() => { setDraftAdvanced(advanced); setAdvancedOpen((open) => !open); }}>高级筛选{hasAdvancedFilter && <i />}</button></div>
+        {advancedOpen && <div className="task-v2-search-filters">
+          <label>处理方式<select value={draftAdvanced.mode} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, mode: event.target.value as "全部" | TaskMode })}><option>全部</option><option>人工</option><option>犇犇</option></select></label>
+          <label>关联店铺<select value={draftAdvanced.store} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, store: event.target.value })}><option>全部店铺</option><option>班牛数码专营店</option><option>班牛官方旗舰店</option><option>天马数码专营店</option></select></label>
+          <label>任务状态<select value={draftAdvanced.status} onChange={(event) => setDraftAdvanced({ ...draftAdvanced, status: event.target.value })}><option>全部状态</option><option>待确认</option><option>待处理</option><option>处理中</option><option>已完成</option></select></label>
+          <footer><button type="button" onClick={resetAdvanced}>重置</button><button type="button" onClick={applyAdvanced}>应用筛选</button></footer>
+        </div>}
+        {search.trim() ? <div className="task-v2-search-results">{shownTasks.length ? shownTasks.map((task) => <button type="button" key={task.order} onClick={() => { setActiveTask(taskData.indexOf(task)); setTaskSearchOpen(false); }}><span className={task.risk}>{({ high: "高风险", medium: "中风险", low: "低风险", other: "其他" } as Record<TaskRisk, string>)[task.risk]}</span><strong>{task.title}</strong><time>{task.order}</time><p>{task.summary}</p></button>) : <p>未找到匹配任务</p>}</div> : <p className="task-v2-search-empty">输入任务标题、订单号或买家 ID</p>}
+      </div>
+    </section></div>}
     {notice && <div className="task-v2-toast" role="status">{notice}</div>}
   </main>;
 }
 
-type SettingsView = "intents" | "shopNavigation" | "dataManagement" | "dataAnalysis" | "orderConfig" | "tuning" | "sessions" | "shopManagement";
+type SettingsView = "chatSettings" | "intents" | "shopNavigation" | "dataManagement" | "dataAnalysis" | "orderConfig" | "tuning" | "sessions" | "shopManagement";
 
 const settingPageMeta: Record<SettingsView, { title: string; subtitle: string }> = {
+  chatSettings: { title: "犇犇Chat 设置", subtitle: "管理 Chat 的外观偏好与 IM 绑定。" },
   intents: { title: "会话意图分发", subtitle: "CHAT INTENT DISTRIBUTION" },
   shopNavigation: { title: "店铺AI导航配置", subtitle: "SHOP AI NAVIGATION CONFIGURATION" },
   dataManagement: { title: "数据管理", subtitle: "TASK DATA MANAGEMENT" },
@@ -181,7 +182,7 @@ const settingPageMeta: Record<SettingsView, { title: string; subtitle: string }>
 };
 
 function SettingsCenter({ onBack }: { onBack: () => void }) {
-  const [page, setPage] = useState<SettingsView>("intents");
+  const [page, setPage] = useState<SettingsView>("chatSettings");
   const [notice, setNotice] = useState("");
   const announce = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(""), 2200); };
   const groups: Array<{ name: string; icon: string; pages: Array<[SettingsView, string]> }> = [
@@ -193,12 +194,30 @@ function SettingsCenter({ onBack }: { onBack: () => void }) {
 
   return <main className="settings-center">
     <PlatformRail />
-    <aside className="settings-center-nav"><button className="settings-back" type="button" onClick={onBack}>‹ 返回</button><h1>配置中心</h1><nav>{groups.map((group) => <section key={group.name}><header><span>{group.icon}</span>{group.name}<i>⌃</i></header>{group.pages.map(([id, label]) => <button className={page === id ? "on" : ""} type="button" onClick={() => setPage(id)} key={id}>{label}</button>)}</section>)}</nav></aside>
-    <section className="settings-center-workspace"><header className="settings-page-heading"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></header><SettingsPage view={page} announce={announce} />{notice && <p className="settings-toast" role="status">✓ {notice}</p>}</section>
+    <div className="settings-center-surface">
+      <header className="settings-center-topbar">
+        <button className="settings-back" type="button" onClick={onBack}>← 返回</button>
+        <strong>设置</strong>
+        <div className="settings-center-topbar-spacer" />
+      </header>
+      <div className="settings-center-body">
+        <aside className="settings-center-nav">
+          <nav>
+            <button className={`settings-chat-entry ${page === "chatSettings" ? "on" : ""}`} type="button" onClick={() => setPage("chatSettings")}>犇犇Chat 设置</button>
+            {groups.map((group) => <section key={group.name}><header><span>{group.icon}</span>{group.name}<i>⌃</i></header>{group.pages.map(([id, label]) => <button className={page === id ? "on" : ""} type="button" onClick={() => setPage(id)} key={id}>{label}</button>)}</section>)}
+          </nav>
+        </aside>
+        <section className="settings-center-workspace">
+          {page === "chatSettings" ? <ChatSettings announce={announce} /> : <><header className="settings-page-heading"><div><h1>{meta.title}</h1><p>{meta.subtitle}</p></div></header><SettingsPage view={page} announce={announce} /></>}
+        </section>
+      </div>
+    </div>
+    {notice && <p className="settings-toast" role="status">✓ {notice}</p>}
   </main>;
 }
 
 function SettingsPage({ view, announce }: { view: SettingsView; announce: (message: string) => void }) {
+  if (view === "chatSettings") return <ChatSettings announce={announce} />;
   if (view === "intents") return <IntentDistribution announce={announce} />;
   if (view === "shopNavigation") return <ShopNavigation announce={announce} />;
   if (view === "dataManagement") return <TaskDataManagement announce={announce} />;
@@ -207,6 +226,33 @@ function SettingsPage({ view, announce }: { view: SettingsView; announce: (messa
   if (view === "tuning") return <TuningCenter announce={announce} />;
   if (view === "sessions") return <SessionManagement announce={announce} />;
   return <ShopManagement announce={announce} />;
+}
+
+function ChatSettings({ announce }: { announce: (message: string) => void }) {
+  const [theme, setTheme] = useState("浅色");
+  const [binding, setBinding] = useState("新建绑定");
+  const [channel, setChannel] = useState("飞书");
+  const themes = [
+    ["浅色", "theme-light"], ["深色", "theme-dark"], ["玻璃", "theme-glass"], ["清透", "theme-clear"],
+  ] as const;
+  return <article className="chat-settings-card">
+    <h1>犇犇Chat 设置</h1>
+    <p className="chat-settings-intro">管理 Chat 的外观偏好与 IM 绑定。</p>
+    <section className="chat-settings-section">
+      <h2>主题切换</h2>
+      <div className="chat-settings-themes">{themes.map(([label, tone]) => <button type="button" className={`chat-settings-theme ${theme === label ? "on" : ""}`} key={label} onClick={() => { setTheme(label); announce(`已切换为${label}主题`); }}><span className={`chat-settings-theme-preview ${tone}`}><i /><i /></span><strong>{label}</strong>{theme === label && <b>✓</b>}</button>)}</div>
+    </section>
+    <section className="chat-settings-section chat-settings-binding">
+      <h2>IM 绑定</h2>
+      <p className="chat-settings-label">已有绑定</p>
+      <select value={binding} onChange={(event) => setBinding(event.target.value)}><option>新建绑定</option><option>售后工作群</option><option>犇犇客服群</option></select>
+      <div className="chat-settings-channel-tabs">{["飞书", "钉钉"].map((item) => <button type="button" className={channel === item ? "on" : ""} key={item} onClick={() => setChannel(item)}>{item}</button>)}</div>
+      <div className="chat-settings-fields"><label>App ID<input placeholder="请输入 App ID" /></label><label>App Secret<input type="password" placeholder="请输入 App Secret" /></label></div>
+      <label className="chat-settings-wide-field">备注<input placeholder="为这条绑定添加说明（选填）" /></label>
+      <label className="chat-settings-wide-field">会话标题<input placeholder="例如：售后经营日报" /></label>
+      <button type="button" className="chat-settings-submit" onClick={() => announce(`已生成${channel}绑定`)}>生成绑定</button>
+    </section>
+  </article>;
 }
 
 function IntentDistribution({ announce }: { announce: (message: string) => void }) {
@@ -584,7 +630,7 @@ function ChatHome({ menuOpen, initialSettings = false, initialAutomation = false
     }
   }}>
     <aside className="side-rail"><img className="brand" src={`${A}/brand-mark.svg`} alt="犇犇" /><RailButtons /><img className="user-avatar" src={`${A}/avatar.svg`} alt="用户头像" /></aside>
-    <header className="chat-v3-topbar"><div className="chat-v3-product-wrap"><button className={`chat-v3-product ${isMenuOpen ? "open" : ""}`} type="button" aria-label="切换产品" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="chat" />}</div><button type="button" className="chat-v3-search-trigger" aria-label="搜索会话" onClick={() => { setSearchOpen(true); setSearchQuery(""); }}><img src={`${A}/search-top.svg`} alt="" /></button><button className="chat-v3-mobile-history" type="button" aria-label="展开会话列表" onClick={() => setHistoryOpen((open) => !open)}><ChatUiIcon name="panel" /></button><a className="chat-v3-hub-link" href="/?design=1404-1493&expert=1"><span>✧</span>专家·技能·连接器</a><i /><button className="chat-v3-settings" type="button" onClick={() => setSettingsOpen(true)}><img src={`${A}/settings-16.svg`} alt="" />设置</button></header>
+    <header className="chat-v3-topbar"><div className="chat-v3-product-wrap"><button className={`chat-v3-product ${isMenuOpen ? "open" : ""}`} type="button" aria-label="切换产品" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>犇犇Chat <img src={`${A}/chevron.svg`} alt="" /></button>{isMenuOpen && <ProductMenu current="chat" />}</div><div className="chat-v3-search-wrap"><label className="chat-v3-search"><img src={`${A}/search-top.svg`} alt="" /><input readOnly aria-label="搜索会话" value={searchQuery} onClick={() => setSearchOpen(true)} onFocus={() => setSearchOpen(true)} placeholder="搜索" /></label></div><button className="chat-v3-mobile-history" type="button" aria-label="展开会话列表" onClick={() => setHistoryOpen((open) => !open)}><ChatUiIcon name="panel" /></button><a className="chat-v3-hub-link" href="/?design=1404-1493&expert=1"><span>✧</span>专家·技能·连接器</a><i /><button className="chat-v3-settings" type="button" onClick={() => setSettingsOpen(true)}><img src={`${A}/settings-16.svg`} alt="" />设置</button></header>
     <section className={`chat-v3-shell ${historyOpen ? "history-open" : "history-collapsed"}`}><aside className="chat-v3-history" aria-label="会话列表">
       <header><div className="chat-v3-sidebar-actions"><button type="button" onClick={newConversation}><ChatUiIcon name="new" /><span>新建对话</span></button><button type="button" className={`chat-v3-automation-entry ${automationOpen ? "active" : ""}`} aria-pressed={automationOpen} onClick={() => { stopReply(); setHistoryMenu(null); setAutomationOpen(true); }}><ChatUiIcon name="automation" /><span>定时任务</span></button></div><button type="button" aria-label={historyOpen ? "收起会话列表" : "展开会话列表"} onClick={() => setHistoryOpen((open) => !open)}><ChatUiIcon name="panel" /></button></header>
       {historyOpen && <><h2>历史对话</h2><div className="chat-v3-history-list">{history.map((item) => <div className={`chat-v3-history-row ${activeConversation === item.id ? "active" : ""}`} key={item.id}>
@@ -596,7 +642,7 @@ function ChatHome({ menuOpen, initialSettings = false, initialAutomation = false
       {!activeConversation && <section className="chat-v3-more-content"><h2>更多内容</h2><p>主题切换</p><div>{([["light", "浅色"], ["dark", "深色"], ["glass", "玻璃"], ["clear", "清透"]] as const).map(([value,label]) => <button key={value} type="button" className={`chat-v3-theme-card ${value} ${theme === value ? "on" : ""}`} aria-pressed={theme === value} onClick={() => setTheme(value)}><i /><span>{label}</span>{theme === value && <b>✓</b>}</button>)}</div></section>}
     </>}</main></section>
     {renameTarget && <div className="chat-v3-modal-layer" onMouseDown={() => setRenameTarget(null)}><form className="chat-v3-rename-dialog" role="dialog" aria-label="重命名对话" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); if (!renameDraft.trim()) return; setHistory((items) => items.map((item) => item.id === renameTarget ? {...item, title: renameDraft.trim()} : item)); setRenameTarget(null); }}><h2>重命名对话</h2><input autoFocus aria-label="对话名称" value={renameDraft} onChange={(event) => setRenameDraft(event.target.value)} /><footer><button type="button" onClick={() => setRenameTarget(null)}>取消</button><button type="submit" disabled={!renameDraft.trim()}>保存</button></footer></form></div>}
-    {searchOpen && <div className="chat-v3-modal-layer" onMouseDown={() => setSearchOpen(false)}><section className="chat-v3-search-modal" role="dialog" aria-label="搜索会话" onMouseDown={(event) => event.stopPropagation()}><header><img src={`${A}/search-top.svg`} alt="" /><input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜索会话内容..." /><button type="button" onClick={() => setSearchOpen(false)}>×</button></header>{searchQuery ? <div>{searchResults.length ? searchResults.map((item) => <button type="button" onClick={() => { selectConversation(item.id); setSearchOpen(false); }} key={item.id}><span>▢</span>{item.title}</button>) : <p>未找到匹配会话</p>}</div> : <p>输入关键词搜索会话内容</p>}</section></div>}
+    {searchOpen && <div className="chat-v3-modal-layer chat-v3-search-layer" onMouseDown={() => setSearchOpen(false)}><section className="chat-v3-search-modal" role="dialog" aria-label="搜索会话" onMouseDown={(event) => event.stopPropagation()}><header><img src={`${A}/search-top.svg`} alt="" /><input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜索会话内容..." /><button type="button" onClick={() => setSearchOpen(false)} aria-label="关闭">×</button></header>{searchQuery ? <div>{searchResults.length ? searchResults.map((item) => <button type="button" onClick={() => { selectConversation(item.id); setSearchOpen(false); }} key={item.id}><span>▢</span>{item.title}</button>) : <p>未找到匹配会话</p>}</div> : <p>输入关键词搜索会话内容</p>}</section></div>}
     {skillsOpen && <div className="chat-v3-modal-layer" onMouseDown={() => setSkillsOpen(false)}><section className="chat-v3-side-modal" onMouseDown={(event) => event.stopPropagation()}><header><strong>我的技能</strong><button type="button" onClick={() => setSkillsOpen(false)}>×</button></header>{["售后订单查询", "退款原因归因", "物流履约跟进"].map((skill) => <button type="button" onClick={() => { setMessage(`请使用「${skill}」帮我处理当前问题`); setSkillsOpen(false); }} key={skill}><span>✦</span>{skill}<i>›</i></button>)}</section></div>}
     {settingsOpen && <div className="chat-v3-modal-layer" onMouseDown={() => setSettingsOpen(false)}><section className="chat-v3-settings-modal" onMouseDown={(event) => event.stopPropagation()}><header><strong>主题切换</strong><button type="button" onClick={() => setSettingsOpen(false)}>×</button></header><div>{([ ["light", "浅色"], ["dark", "深色"], ["glass", "玻璃"], ["clear", "清透"] ] as const).map(([value, label]) => <button type="button" className={theme === value ? "on" : ""} onClick={() => setTheme(value)} key={value}><i /><span>{label}</span></button>)}</div></section></div>}
     {settingsPage && <ChatV3SettingsPage theme={theme} onThemeChange={setTheme} />}
@@ -742,7 +788,7 @@ function ExpertHub({ onBack, section }: { onBack: () => void; section: ExpertSec
   }, [customExperts, customExpertsLoaded]);
   if (workspaceExpert) return <CustomExpertWorkspace expert={workspaceExpert} onBack={() => setWorkspaceExpert(null)} />;
   if (section === "connectors") return <ConnectorCenter onBack={onBack} />;
-  return <main className="expert-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a className={section === "experts" ? "on" : ""} href="/?design=1404-1493&expert=1&section=experts">专家</a><a className={section === "skills" ? "on" : ""} href="/?design=1404-1493&expert=1&section=skills">技能</a><a className={section === "connectors" ? "on" : ""} href="/?design=1404-1493&expert=1&section=connectors">连接器</a><button className="management-settings" type="button" aria-label="设置"><img src={`${A}/settings-16.svg`} alt="" /></button></header>{section === "skills" ? <SkillsCenter /> : <section className="expert-hub-body"><div className="expert-toolbar expert-category-toolbar expert-management-row"><nav aria-label="业务类型筛选">{["全部", "售后处理", "工单审核", "订单与交易", "物流履约", "风险识别"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}</nav><div className="expert-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索专家名称" /></label><button className="new-expert" type="button" onClick={() => setCreateOpen(true)}>＋ 添加专家</button></div></div><div className={`expert-grid ${view}`}>{visibleExperts.map((expert) => { const custom = isCustom(expert); const recruited = isRecruited(expert); const openSystem = () => { setTab("我的简介"); setSelected(expert); }; return <article className={`expert-tile ${recruited ? "recruited" : "unrecruited"} ${custom ? "custom-expert" : "system-expert"}`} onClick={custom ? () => setWorkspaceExpert(expert) : openSystem} onKeyDown={(event) => { if (event.key === "Enter") custom ? setWorkspaceExpert(expert) : openSystem(); }} role="button" tabIndex={0} key={expert[0]}><header><img src={expertImage(expert)} alt="" /><div><div className="expert-title-row"><strong>{expert[1]}</strong></div><span className="expert-category-tag">{expertCategory(expert)}</span></div>{recruited ? <button className="expert-recruit-status" type="button" onClick={(event) => { event.stopPropagation(); cancelExpert(expert[0]); }}><span className="active-label">✓ 已招募</span><span className="cancel-label">取消招募</span></button> : <span className="recruit-label"><i>未招募</i><b>去招募　→</b></span>}</header><p>{expert[3]}</p></article>; })}</div></section>}{createOpen && <CreateExpertModal onClose={() => setCreateOpen(false)} onContinue={(expert) => { setCustomExperts((all) => all.some(([id]) => id === expert[0]) ? all : [...all, expert]); setFilter("全部"); setCreateOpen(false); setWorkspaceExpert(expert); }} />}{selected && <RecruitModal expert={selected} tab={tab} setTab={setTab} recruited={isRecruited(selected)} config={recruitConfigs[selected[0]]} onConfigChange={(config) => setRecruitConfigs((all) => ({ ...all, [selected[0]]: config }))} onClose={() => setSelected(null)} onRecruit={() => { recruitExpert(selected[0]); setSelected(null); }} onCancelRecruit={() => { cancelExpert(selected[0]); setSelected(null); }} />}</main>;
+  return <main className="expert-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a className={section === "experts" ? "on" : ""} href="/?design=1404-1493&expert=1&section=experts">专家</a><a className={section === "skills" ? "on" : ""} href="/?design=1404-1493&expert=1&section=skills">技能</a><a className={section === "connectors" ? "on" : ""} href="/?design=1404-1493&expert=1&section=connectors">连接器</a></header>{section === "skills" ? <SkillsCenter /> : <section className="expert-hub-body"><div className="expert-toolbar expert-category-toolbar expert-management-row"><nav aria-label="业务类型筛选">{["全部", "售后处理", "工单审核", "订单与交易", "物流履约", "风险识别"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}</nav><div className="expert-view-tools"><button aria-label="列表视图" className={view === "list" ? "active" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button><label><img src={`${A}/search-expert.svg`} alt="" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索专家名称" /></label><button className="new-expert" type="button" onClick={() => setCreateOpen(true)}>＋ 创建专家</button></div></div><div className={`expert-grid ${view}`}>{visibleExperts.map((expert) => { const custom = isCustom(expert); const recruited = isRecruited(expert); const openSystem = () => { setTab("我的简介"); setSelected(expert); }; return <article className={`expert-tile ${recruited ? "recruited" : "unrecruited"} ${custom ? "custom-expert" : "system-expert"}`} onClick={custom ? () => setWorkspaceExpert(expert) : openSystem} onKeyDown={(event) => { if (event.key === "Enter") custom ? setWorkspaceExpert(expert) : openSystem(); }} role="button" tabIndex={0} key={expert[0]}><header><img src={expertImage(expert)} alt="" /><div><div className="expert-title-row"><strong>{expert[1]}</strong></div><span className="expert-category-tag">{expertCategory(expert)}</span></div>{recruited ? <button className="expert-recruit-status" type="button" onClick={(event) => { event.stopPropagation(); cancelExpert(expert[0]); }}><span className="active-label">✓ 已招募</span><span className="cancel-label">取消招募</span></button> : <span className="recruit-label"><i>未招募</i><b>去招募　→</b></span>}</header><p>{expert[3]}</p></article>; })}</div></section>}{createOpen && <CreateExpertModal onClose={() => setCreateOpen(false)} onContinue={(expert) => { setCustomExperts((all) => all.some(([id]) => id === expert[0]) ? all : [...all, expert]); setFilter("全部"); setCreateOpen(false); setWorkspaceExpert(expert); }} />}{selected && <RecruitModal expert={selected} tab={tab} setTab={setTab} recruited={isRecruited(selected)} config={recruitConfigs[selected[0]]} onConfigChange={(config) => setRecruitConfigs((all) => ({ ...all, [selected[0]]: config }))} onClose={() => setSelected(null)} onRecruit={() => { recruitExpert(selected[0]); setSelected(null); }} onCancelRecruit={() => { cancelExpert(selected[0]); setSelected(null); }} />}</main>;
 }
 
 function CustomExpertWorkspace({ expert, onBack }: { expert: Expert; onBack: () => void }) {
@@ -836,14 +882,14 @@ function SkillsCenter() {
     setNotice("技能已保存到我的技能");
   };
 
-  return <section className="library-page skill-center"><div className="expert-toolbar expert-category-toolbar skill-management-row"><nav aria-label="技能分类筛选">{categories.map((item) => <button className={filter === item ? "active" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</nav><div className="library-actions"><div className="view-toggle"><button aria-label="列表视图" className={view === "list" ? "on" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "on" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button></div><label className="library-search"><img src={`${A}/search-expert.svg`} alt="" /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(queryDraft); }} placeholder="搜索技能名称" /></label><button className="library-query" type="button" onClick={() => setQuery(queryDraft)}>查询</button><button className="library-add" type="button" onClick={() => setEditorSkill(null)}>＋ 添加关联技能</button></div></div>{filtered.length ? <div className={`library-grid ${view}`}>{filtered.map((skill) => { const enabled = !disabledSkillIds.includes(skill.id); return <article className="skill-card" key={skill.id} onClick={() => skill.scope === "mine" ? setEditorSkill(skill) : setNotice("系统技能为平台能力，暂不支持直接修改")}><header><img src="/figma-connectors/skill-icon.svg" alt="" /><div><strong>{skill.name}</strong><span>{skill.category}</span></div><button className={`skill-status ${enabled ? "enabled" : "disabled"}`} type="button" onClick={(event) => { event.stopPropagation(); setDisabledSkillIds((ids) => ids.includes(skill.id) ? ids.filter((id) => id !== skill.id) : [...ids, skill.id]); }}><span className="active-label">{enabled ? "✓ 已启用" : "已取消"}</span><span className="cancel-label">{enabled ? "取消" : "重新启用"}</span></button></header><p>{skill.description}</p>{skill.scope === "mine" && <button className="skill-edit" aria-label={`编辑 ${skill.name}`} type="button" onClick={(event) => { event.stopPropagation(); setEditorSkill(skill); }}><img src={`${A}/edit.svg`} alt="" /></button>}</article>; })}</div> : <div className="library-empty"><img src="/figma-connectors/skill-icon.svg" alt="" /><strong>没有匹配的技能</strong><p>试试切换分类或调整搜索关键词。</p></div>}{editorSkill !== undefined && <SkillEditorModal skill={editorSkill} onClose={() => setEditorSkill(undefined)} onSave={saveSkill} />}{notice && <div className="library-toast">{notice}</div>}</section>;
+  return <section className="library-page skill-center"><div className="expert-toolbar expert-category-toolbar skill-management-row"><nav aria-label="技能分类筛选">{categories.map((item) => <button className={filter === item ? "active" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</nav><div className="library-actions"><div className="view-toggle"><button aria-label="列表视图" className={view === "list" ? "on" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "on" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button></div><label className="library-search"><img src={`${A}/search-expert.svg`} alt="" /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(queryDraft); }} placeholder="搜索技能名称" /></label><button className="library-query" type="button" onClick={() => setQuery(queryDraft)}>查询</button><button className="library-add" type="button" onClick={() => setEditorSkill(null)}>＋ 创建技能</button></div></div>{filtered.length ? <div className={`library-grid ${view}`}>{filtered.map((skill) => { const enabled = !disabledSkillIds.includes(skill.id); return <article className="skill-card" key={skill.id} onClick={() => skill.scope === "mine" ? setEditorSkill(skill) : setNotice("系统技能为平台能力，暂不支持直接修改")}><header><img src="/figma-connectors/skill-icon.svg" alt="" /><div><strong>{skill.name}</strong><span>{skill.category}</span></div><button className={`skill-status ${enabled ? "enabled" : "disabled"}`} type="button" onClick={(event) => { event.stopPropagation(); setDisabledSkillIds((ids) => ids.includes(skill.id) ? ids.filter((id) => id !== skill.id) : [...ids, skill.id]); }}><span className="active-label">{enabled ? "✓ 已启用" : "已取消"}</span><span className="cancel-label">{enabled ? "取消" : "重新启用"}</span></button></header><p>{skill.description}</p>{skill.scope === "mine" && <button className="skill-edit" aria-label={`编辑 ${skill.name}`} type="button" onClick={(event) => { event.stopPropagation(); setEditorSkill(skill); }}><img src={`${A}/edit.svg`} alt="" /></button>}</article>; })}</div> : <div className="library-empty"><img src="/figma-connectors/skill-icon.svg" alt="" /><strong>没有匹配的技能</strong><p>试试切换分类或调整搜索关键词。</p></div>}{editorSkill !== undefined && <SkillEditorModal skill={editorSkill} onClose={() => setEditorSkill(undefined)} onSave={saveSkill} />}{notice && <div className="library-toast">{notice}</div>}</section>;
 }
 
 function SkillEditorModal({ skill, onClose, onSave }: { skill: Skill | null; onClose: () => void; onSave: (skill: Skill) => void }) {
   const [name, setName] = useState(skill?.name ?? "");
   const [description, setDescription] = useState(skill?.description ?? "");
   const [category, setCategory] = useState(skill?.category ?? "通用");
-  return <div className="modal-layer library-modal-layer"><section className="library-editor-modal"><button className="close" type="button" onClick={onClose}>×</button><header><img src="/figma-connectors/skill-icon.svg" alt="" /><div><h2>{skill ? "编辑关联技能" : "添加关联技能"}</h2><p>配置技能名称与说明，保存后可在我的技能中使用。</p></div></header><label>技能名称<input value={name} onChange={(event) => setName(event.target.value)} placeholder="请输入技能名称" autoFocus /></label><label>技能分类<select value={category} onChange={(event) => setCategory(event.target.value)}>{["订单", "工单", "售后", "物流", "通用"].map((item) => <option key={item}>{item}</option>)}</select></label><label>技能说明<textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={160} placeholder="请输入技能的使用说明" /></label><footer><button type="button" className="modal-secondary" onClick={onClose}>取消</button><button type="button" className="modal-primary" disabled={!name.trim()} onClick={() => onSave({ id: skill?.id ?? `custom-skill-${Date.now()}`, name: name.trim(), description: description.trim() || "暂无技能说明。", category, scope: "mine" })}>保存</button></footer></section></div>;
+  return <div className="modal-layer library-modal-layer"><section className="library-editor-modal"><button className="close" type="button" onClick={onClose}>×</button><header><img src="/figma-connectors/skill-icon.svg" alt="" /><div><h2>{skill ? "编辑关联技能" : "创建技能"}</h2><p>配置技能名称与说明，保存后可在我的技能中使用。</p></div></header><label>技能名称<input value={name} onChange={(event) => setName(event.target.value)} placeholder="请输入技能名称" autoFocus /></label><label>技能分类<select value={category} onChange={(event) => setCategory(event.target.value)}>{["订单", "工单", "售后", "物流", "通用"].map((item) => <option key={item}>{item}</option>)}</select></label><label>技能说明<textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={160} placeholder="请输入技能的使用说明" /></label><footer><button type="button" className="modal-secondary" onClick={onClose}>取消</button><button type="button" className="modal-primary" disabled={!name.trim()} onClick={() => onSave({ id: skill?.id ?? `custom-skill-${Date.now()}`, name: name.trim(), description: description.trim() || "暂无技能说明。", category, scope: "mine" })}>保存</button></footer></section></div>;
 }
 
 type Connector = { id: string; name: string; description: string; type: "ERP" | "应用"; logo: string; authorized: boolean };
@@ -895,7 +941,7 @@ function ConnectorCenter({ onBack }: { onBack: () => void }) {
   };
   const openConnector = (connector: Connector) => { setAuthTarget(connector); };
 
-  return <main className="expert-hub connector-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a href="/?design=1404-1493&expert=1&section=experts">专家</a><a href="/?design=1404-1493&expert=1&section=skills">技能</a><a className="on" href="/?design=1404-1493&expert=1&section=connectors">连接器</a><button className="management-settings" type="button" aria-label="设置"><img src={`${A}/settings-16.svg`} alt="" /></button></header><section className="library-page connector-center"><div className="expert-toolbar expert-category-toolbar skill-management-row"><nav aria-label="连接器类型筛选">{categories.map((item) => <button className={filter === item ? "active" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</nav><div className="library-actions"><div className="view-toggle"><button aria-label="列表视图" className={view === "list" ? "on" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "on" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button></div><label className="library-search"><img src={`${A}/search-expert.svg`} alt="" /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(queryDraft); }} placeholder="搜索连接器名称" /></label><button className="library-query" type="button" onClick={() => setQuery(queryDraft)}>查询</button></div></div>{filtered.length ? <div className={`connector-grid ${view}`}>{filtered.map((connector) => <article className="connector-card" key={connector.id} onClick={() => openConnector(connector)}><header><div className="connector-logo"><img src={connector.logo} alt="" /></div><div className="connector-name"><strong>{connector.name}</strong><span>{connector.type}</span></div>{connectorStates[connector.id] && <button className="connector-auth-status" type="button" onClick={(event) => { event.stopPropagation(); setCancelTarget(connector); }}><span className="active-label">✓ 已授权</span><span className="cancel-label">取消授权</span></button>}</header><p>{connector.description}</p><footer><small>{connectorStates[connector.id] ? (accountCounts[connector.id] > 1 ? `${accountCounts[connector.id]} 个账号` : "") : "尚未连接"}</small>{!connectorStates[connector.id] && <button className="connect" type="button" onClick={(event) => { event.stopPropagation(); openConnector(connector); }}>授权连接</button>}</footer></article>)}</div> : <div className="library-empty"><strong>没有匹配的连接器</strong><p>试试切换分类或调整搜索关键词。</p></div>}{authTarget && <ConnectorAuthModal connector={authTarget} accountCount={accountCounts[authTarget.id] || 1} onClose={() => setAuthTarget(null)} onSave={(accounts) => saveAuthorization(authTarget.id, accounts)} />}{cancelTarget && <ConnectorCancelModal connector={cancelTarget} onClose={() => setCancelTarget(null)} onConfirm={cancelAuthorization} />}{notice && <div className="library-toast">{notice}</div>}</section></main>;
+  return <main className="expert-hub connector-hub"><PlatformRail /><header className="expert-hub-head"><button type="button" onClick={onBack}>‹ 返回</button><a href="/?design=1404-1493&expert=1&section=experts">专家</a><a href="/?design=1404-1493&expert=1&section=skills">技能</a><a className="on" href="/?design=1404-1493&expert=1&section=connectors">连接器</a></header><section className="library-page connector-center"><div className="expert-toolbar expert-category-toolbar skill-management-row"><nav aria-label="连接器类型筛选">{categories.map((item) => <button className={filter === item ? "active" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</nav><div className="library-actions"><div className="view-toggle"><button aria-label="列表视图" className={view === "list" ? "on" : ""} onClick={() => setView("list")} type="button"><img src={`${A}/view-list.svg`} alt="" /></button><button aria-label="卡片视图" className={view === "cards" ? "on" : ""} onClick={() => setView("cards")} type="button"><img src={`${A}/view-cards.svg`} alt="" /></button></div><label className="library-search"><img src={`${A}/search-expert.svg`} alt="" /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(queryDraft); }} placeholder="搜索连接器名称" /></label><button className="library-query" type="button" onClick={() => setQuery(queryDraft)}>查询</button></div></div>{filtered.length ? <div className={`connector-grid ${view}`}>{filtered.map((connector) => <article className="connector-card" key={connector.id} onClick={() => openConnector(connector)}><header><div className="connector-logo"><img src={connector.logo} alt="" /></div><div className="connector-name"><strong>{connector.name}</strong><span>{connector.type}</span></div>{connectorStates[connector.id] && <button className="connector-auth-status" type="button" onClick={(event) => { event.stopPropagation(); setCancelTarget(connector); }}><span className="active-label">✓ 已授权</span><span className="cancel-label">取消授权</span></button>}</header><p>{connector.description}</p><footer><small>{connectorStates[connector.id] ? (accountCounts[connector.id] > 1 ? `${accountCounts[connector.id]} 个账号` : "") : "尚未连接"}</small>{!connectorStates[connector.id] && <button className="connect" type="button" onClick={(event) => { event.stopPropagation(); openConnector(connector); }}>授权连接</button>}</footer></article>)}</div> : <div className="library-empty"><strong>没有匹配的连接器</strong><p>试试切换分类或调整搜索关键词。</p></div>}{authTarget && <ConnectorAuthModal connector={authTarget} accountCount={accountCounts[authTarget.id] || 1} onClose={() => setAuthTarget(null)} onSave={(accounts) => saveAuthorization(authTarget.id, accounts)} />}{cancelTarget && <ConnectorCancelModal connector={cancelTarget} onClose={() => setCancelTarget(null)} onConfirm={cancelAuthorization} />}{notice && <div className="library-toast">{notice}</div>}</section></main>;
 }
 
 type AuthAccount = { name: string; customerId: string; aesKey: string; appSecret: string; iv: string };
